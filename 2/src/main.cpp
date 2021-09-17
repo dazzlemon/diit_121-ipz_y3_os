@@ -15,8 +15,6 @@
 int main(int argc, char* argv[]) {
     int sleep_time;
     if (argc == 2) {// first arg is path
-        std::cout << "arg is <" << argv[1] << ">" << std::endl;
-        std::cout << "argc = " << argc << std::endl;
         sleep_time = std::stoi(argv[1]);
     } else {
         sleep_time = 0;
@@ -38,4 +36,7 @@ int main(int argc, char* argv[]) {
     } else {
         while (true) {}
     }
+    consumer.running = false;
+    producer.running = false;
+    Sleep(10);// let child threads stop
 }

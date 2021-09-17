@@ -20,6 +20,7 @@ public:
         HANDLE semaphore_full
     );
     static void main_loop(void* producer);
+    bool running = true;
 };
 
 Producer::Producer(
@@ -34,7 +35,7 @@ Producer::Producer(
     __semaphore_full(semaphore_full) {}
 
 void Producer::__main_loop() {
-    while (true) {
+    while (this->running) {
         WaitForSingleObject(this->__semaphore_empty, INFINITE);// P(empty)
         WaitForSingleObject(this->__semaphore_mutex, INFINITE);// P(mutex)
         this->__buffer->push(1);// produce item

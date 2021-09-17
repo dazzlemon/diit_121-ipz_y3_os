@@ -20,6 +20,7 @@ public:
         HANDLE semaphore_full
     );
     static void main_loop(void* consumer);
+    bool running = true;
 };
 
 Consumer::Consumer(
@@ -34,7 +35,7 @@ Consumer::Consumer(
     __semaphore_full(semaphore_full) {}
 
 void Consumer::__main_loop() {
-    while (true) {
+    while (this->running) {
         WaitForSingleObject(this->__semaphore_full, INFINITE);// P(full)
         WaitForSingleObject(this->__semaphore_mutex, INFINITE);// P(mutex)
         this->__buffer->pop();// consume item

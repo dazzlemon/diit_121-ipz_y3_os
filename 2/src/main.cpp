@@ -5,17 +5,26 @@
 
 #include <windows.h>
 #include <process.h>
-#include <functional>
+#include <string>
 #include "producer.h"
 #include "consumer.h"
 #include "buffer.h"
 
 #define BUFFER_SIZE 15
 
-int main() {
+int main(int argc, char* argv[]) {
+    int sleep_time;
+    if (argc == 2) {// first arg is path
+        std::cout << "arg is <" << argv[1] << ">" << std::endl;
+        std::cout << "argc = " << argc << std::endl;
+        sleep_time = std::stoi(argv[1]);
+    } else {
+        sleep_time = 0;
+    }
+
     //                                       NULL, initCount,   maxCount,    name
-    HANDLE semaphore_mutex = CreateSemaphore(NULL, 0,           1,           NULL);
-    HANDLE semaphore_empty = CreateSemaphore(NULL, BUFFER_SIZE, 0,           NULL);
+    HANDLE semaphore_mutex = CreateSemaphore(NULL, 1,           1,           NULL);
+    HANDLE semaphore_empty = CreateSemaphore(NULL, BUFFER_SIZE, BUFFER_SIZE, NULL);
     HANDLE semaphore_full  = CreateSemaphore(NULL, 0,           BUFFER_SIZE, NULL);
 
     Buffer<int> buffer(BUFFER_SIZE);
@@ -24,7 +33,9 @@ int main() {
 
     HANDLE thread_consumer = (HANDLE)_beginthread(Consumer::main_loop, 1024, &consumer);
     HANDLE thread_producer = (HANDLE)_beginthread(Producer::main_loop, 1024, &producer);
-    while (true) {
-        //std::cout << "main" << std::endl;
+    if (sleep_time != 0) {
+        Sleep(sleep_time);
+    } else {
+        while (true) {}
     }
 }

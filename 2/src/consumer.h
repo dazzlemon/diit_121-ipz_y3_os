@@ -35,7 +35,6 @@ Consumer::Consumer(
 
 void Consumer::__main_loop() {
     while (true) {
-        std::cout << "consumer" << std::endl;
         WaitForSingleObject(this->__semaphore_full, INFINITE);// P(full)
         WaitForSingleObject(this->__semaphore_mutex, INFINITE);// P(mutex)
         this->__buffer->pop();// consume item

@@ -4,6 +4,8 @@
 //   3. Accessing memory buffer should not be allowed to producer and consumer at the same time.
 
 #include <windows.h>
+#include <process.h>
+#include <functional>
 #include "producer.h"
 #include "consumer.h"
 #include "buffer.h"
@@ -19,4 +21,7 @@ int main() {
     Buffer<int> buffer(BUFFER_SIZE);
     Consumer consumer(&buffer, semaphore_mutex, semaphore_empty, semaphore_full);
     Consumer producer(&buffer, semaphore_mutex, semaphore_empty, semaphore_full);
+
+    HANDLE thread_consumer = (HANDLE)_beginthread(Consumer::main_loop, 1024, &consumer);
+    HANDLE thread_producer = (HANDLE)_beginthread(Producer::main_loop, 1024, &producer);
 }

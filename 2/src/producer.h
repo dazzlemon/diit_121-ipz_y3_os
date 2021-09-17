@@ -11,6 +11,7 @@ private:
     HANDLE __semaphore_empty;
     HANDLE __semaphore_full;
     Buffer<int>* __buffer;
+    void __main_loop();
 public:
     Producer(
         Buffer<int>* buffer,
@@ -18,7 +19,7 @@ public:
         HANDLE semaphore_empty,
         HANDLE semaphore_full
     );
-    void main_loop(void*);
+    static void main_loop(void* producer);
 };
 
 Producer::Producer(
@@ -32,7 +33,7 @@ Producer::Producer(
     __semaphore_empty(semaphore_empty), 
     __semaphore_full(semaphore_full) {}
 
-void Producer::main_loop(void*) {
+void Producer::__main_loop() {
     while (true) {
         WaitForSingleObject(this->__semaphore_empty, INFINITE);// P(empty)
         WaitForSingleObject(this->__semaphore_mutex, INFINITE);// P(mutex)
@@ -41,5 +42,9 @@ void Producer::main_loop(void*) {
         ReleaseSemaphore(this->__semaphore_mutex, 1, NULL);// V(mutex)
         ReleaseSemaphore(this->__semaphore_full, 1, NULL);// V(full)
     }
+}
+
+void Producer::main_loop(void* producer) {
+    static_cast<Producer*>(producer)->__main_loop();
 }
 #endif

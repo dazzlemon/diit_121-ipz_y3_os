@@ -11,6 +11,7 @@ private:
     HANDLE __semaphore_empty;
     HANDLE __semaphore_full;
     Buffer<int>* __buffer;
+    void __main_loop();
 public:
     Consumer(
         Buffer<int>* buffer,
@@ -18,7 +19,7 @@ public:
         HANDLE semaphore_empty,
         HANDLE semaphore_full
     );
-    void main_loop(void*);
+    static void main_loop(void* consumer);
 };
 
 Consumer::Consumer(
@@ -32,7 +33,7 @@ Consumer::Consumer(
     __semaphore_empty(semaphore_empty), 
     __semaphore_full(semaphore_full) {}
 
-void Consumer::main_loop(void*) {
+void Consumer::__main_loop() {
     while (true) {
         WaitForSingleObject(this->__semaphore_full, INFINITE);// P(full)
         WaitForSingleObject(this->__semaphore_mutex, INFINITE);// P(mutex)
@@ -41,5 +42,9 @@ void Consumer::main_loop(void*) {
         ReleaseSemaphore(this->__semaphore_mutex, 1, NULL);// V(mutex)
         ReleaseSemaphore(this->__semaphore_empty, 1, NULL);// V(empty)
     }
+}
+
+void Consumer::main_loop(void* consumer) {
+    static_cast<Consumer*>(consumer)->__main_loop();
 }
 #endif

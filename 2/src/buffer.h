@@ -11,21 +11,22 @@ private:
     std::vector<T> __buffer;
 public:
     Buffer(size_t size);
-    const size_t size;
+    const size_t max_size;
     bool empty() const;
     bool full() const;
+    size_t size() const;
 
-    void push(const T& t) throw(out_of_range);
-    T pop() throw(out_of_range);
+    void push(const T& t);
+    T pop();
 };
 
 template<class T>
-Buffer<T>::Buffer(size_t size) : size(size) {}
+Buffer<T>::Buffer(size_t size) : max_size(size) {}
 
 template<class T>
 void Buffer<T>::push(const T& t) {
     if (this->full()) {
-        throw new out_of_range("Attempt to push to full buffer");
+        throw new std::out_of_range("Attempt to push to full buffer");
     }
     this->__buffer.push_back(t);
 }
@@ -33,10 +34,10 @@ void Buffer<T>::push(const T& t) {
 template<class T>
 T Buffer<T>::pop() {
     if (this->empty()) {
-        throw new out_of_range("Attempt to pop from empty buffer");
+        throw new std::out_of_range("Attempt to pop from empty buffer");
     }
     auto r = this->__buffer.back();
-    this->__buffer.pop();
+    this->__buffer.pop_back();
     return r;
 }
 
@@ -47,6 +48,11 @@ bool Buffer<T>::empty() const {
 
 template<class T>
 bool Buffer<T>::full() const {
-    return this->__buffer.size() >= this->size;
+    return this->__buffer.size() >= this->max_size;
+}
+
+template<class T>
+size_t Buffer<T>::size() const {
+    return this->__buffer.size();
 }
 #endif

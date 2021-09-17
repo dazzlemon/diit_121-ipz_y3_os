@@ -1,6 +1,7 @@
 #ifndef PRODUCER_H
 #define PRODUCER_H
 
+#include <iostream>
 #include <windows.h>
 #include "buffer.h"
 
@@ -36,6 +37,7 @@ void Producer::main_loop(void*) {
         WaitForSingleObject(this->__semaphore_empty, INFINITE);// P(empty)
         WaitForSingleObject(this->__semaphore_mutex, INFINITE);// P(mutex)
         this->__buffer->push(1);// produce item
+        std::cout << "pushed, size: " << this->__buffer->size() << " of " << this->__buffer->max_size << std::endl;
         ReleaseSemaphore(this->__semaphore_mutex, 1, NULL);// V(mutex)
         ReleaseSemaphore(this->__semaphore_full, 1, NULL);// V(full)
     }

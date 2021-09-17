@@ -1,6 +1,8 @@
 #ifndef CONSUMER_H
 #define CONSUMER_H
 
+#include <iostream>
+#include <windows.h>
 #include "buffer.h"
 
 class Consumer {
@@ -35,6 +37,7 @@ void Consumer::main_loop(void*) {
         WaitForSingleObject(this->__semaphore_full, INFINITE);// P(full)
         WaitForSingleObject(this->__semaphore_mutex, INFINITE);// P(mutex)
         this->__buffer->pop();// consume item
+        std::cout << "poped, size: " << this->__buffer->size() << " of " << this->__buffer->max_size << std::endl;
         ReleaseSemaphore(this->__semaphore_mutex, 1, NULL);// V(mutex)
         ReleaseSemaphore(this->__semaphore_empty, 1, NULL);// V(empty)
     }

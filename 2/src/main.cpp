@@ -24,4 +24,7 @@ int main() {
 
     HANDLE thread_consumer = (HANDLE)_beginthread(Consumer::main_loop, 1024, &consumer);
     HANDLE thread_producer = (HANDLE)_beginthread(Producer::main_loop, 1024, &producer);
+    while (true) {
+        //std::cout << "main" << std::endl;
+    }
 }

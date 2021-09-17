@@ -35,6 +35,7 @@ Producer::Producer(
 
 void Producer::__main_loop() {
     while (true) {
+        std::cout << "producer" << std::endl;
         WaitForSingleObject(this->__semaphore_empty, INFINITE);// P(empty)
         WaitForSingleObject(this->__semaphore_mutex, INFINITE);// P(mutex)
         this->__buffer->push(1);// produce item

@@ -3,49 +3,24 @@
 
 #include <iostream>
 #include <windows.h>
+#include "consumer_producer_base.h"
 #include "buffer.h"
+#include "logger.h"
 
-class Producer {
-private:
-    HANDLE __semaphore_mutex;
-    HANDLE __semaphore_empty;
-    HANDLE __semaphore_full;
-    Buffer<int>* __buffer;
-    void __main_loop();
-public:
-    Producer(
-        Buffer<int>* buffer,
-        HANDLE semaphore_mutex,
-        HANDLE semaphore_empty,
-        HANDLE semaphore_full
-    );
-    static void main_loop(void* producer);
-    bool running = true;
+class Producer : public ConsumerProducerBase {
+protected:
+    virtual void _main_loop() final;
+    using ConsumerProducerBase::ConsumerProducerBase;
 };
 
-Producer::Producer(
-    Buffer<int>* buffer,
-    HANDLE semaphore_mutex,
-    HANDLE semaphore_empty,
-    HANDLE semaphore_full
-) :
-    __buffer(buffer),
-    __semaphore_mutex(semaphore_mutex),
-    __semaphore_empty(semaphore_empty), 
-    __semaphore_full(semaphore_full) {}
-
-void Producer::__main_loop() {
-    while (this->running) {
-        WaitForSingleObject(this->__semaphore_empty, INFINITE);// P(empty)
-        WaitForSingleObject(this->__semaphore_mutex, INFINITE);// P(mutex)
-        this->__buffer->push(1);// produce item
-        std::cout << "pushed, size: " << this->__buffer->size() << " of " << this->__buffer->max_size << std::endl;
-        ReleaseSemaphore(this->__semaphore_mutex, 1, NULL);// V(mutex)
-        ReleaseSemaphore(this->__semaphore_full, 1, NULL);// V(full)
-    }
-}
-
-void Producer::main_loop(void* producer) {
-    static_cast<Producer*>(producer)->__main_loop();
+void Producer::_main_loop() {
+    std::cout << "?";
+    WaitForSingleObject(this->_semaphore_empty, INFINITE);// P(empty)
+    WaitForSingleObject(this->_semaphore_mutex, INFINITE);// P(mutex)
+    this->_buffer->push(1);// produce item
+    std::cout << "pushed" << std::endl;
+    logger::log_buffer_state(*this->_buffer);
+    ReleaseSemaphore(this->_semaphore_mutex, 1, NULL);// V(mutex)
+    ReleaseSemaphore(this->_semaphore_full,  1, NULL);// V(full)
 }
 #endif

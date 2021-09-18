@@ -1,10 +1,8 @@
 #ifndef CONSUMER_PRODUCER_BASE_H
 #define CONSUMER_PRODUCER_BASE_H
 
-#include <iostream>
 #include <windows.h>
 #include "buffer.h"
-#include "logger.h"
 
 /**
  * main_loop sets running to true,

@@ -26,11 +26,11 @@ int main(int argc, char* argv[]) {
     HANDLE semaphore_full  = CreateSemaphore(NULL, 0,           BUFFER_SIZE, NULL);
 
     Buffer<int> buffer(BUFFER_SIZE);
+    Producer producer(&buffer, semaphore_mutex, semaphore_empty, semaphore_full);
     Consumer consumer(&buffer, semaphore_mutex, semaphore_empty, semaphore_full);
-    Consumer producer(&buffer, semaphore_mutex, semaphore_empty, semaphore_full);
 
-    HANDLE thread_consumer = (HANDLE)_beginthread(Consumer::main_loop, 1024, &consumer);
-    HANDLE thread_producer = (HANDLE)_beginthread(Producer::main_loop, 1024, &producer);
+    HANDLE thread_producer = (HANDLE)_beginthread(Producer::main_loop, 4096, &producer);
+    HANDLE thread_consumer = (HANDLE)_beginthread(Consumer::main_loop, 4096, &consumer);
     if (sleep_time != 0) {
         Sleep(sleep_time);
     } else {

@@ -5,7 +5,7 @@
 
 class Producer : public ConsumerProducerBase {
 protected:
-    virtual void _main_loop() final;
+    void _main_loop() final;
     using ConsumerProducerBase::ConsumerProducerBase;
 };
 #endif

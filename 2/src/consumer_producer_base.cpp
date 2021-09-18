@@ -1,4 +1,6 @@
 #include "consumer_producer_base.h"
+#include <iostream>
+#include <process.h>
 
 ConsumerProducerBase::ConsumerProducerBase(
     Buffer<int>* buffer,
@@ -13,8 +15,8 @@ ConsumerProducerBase::ConsumerProducerBase(
 
 void ConsumerProducerBase::__main_loop() {
     while (this->running) {
-        std::cout << "*";
-        /*this->*/_main_loop();
+        // std::cout << "thread=" << GetCurrentThreadId() << std::endl;
+        this->_main_loop();
     }
 }
 

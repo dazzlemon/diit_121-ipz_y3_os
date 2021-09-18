@@ -2,6 +2,7 @@
 #define LOGGER_H
 
 #include "buffer.h"
+#include <iostream>
 namespace logger {
 
 template<class T>

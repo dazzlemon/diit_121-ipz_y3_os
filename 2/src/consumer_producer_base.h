@@ -30,28 +30,4 @@ public:
     static void main_loop(void* consumer);
     bool running = false;
 };// class ConsumerProducerBase
-
-ConsumerProducerBase::ConsumerProducerBase(
-    Buffer<int>* buffer,
-    HANDLE semaphore_mutex,
-    HANDLE semaphore_empty,
-    HANDLE semaphore_full
-) :
-    _buffer(buffer),
-    _semaphore_mutex(semaphore_mutex),
-    _semaphore_empty(semaphore_empty), 
-    _semaphore_full(semaphore_full) {}
-
-void ConsumerProducerBase::__main_loop() {
-    while (this->running) {
-        std::cout << "iteration" << std::endl;
-        this->_main_loop();
-        std::cout << "iteration'" << std::endl;
-    }
-}
-
-void ConsumerProducerBase::main_loop(void* cpb) {
-    static_cast<ConsumerProducerBase*>(cpb)->running = true;
-    static_cast<ConsumerProducerBase*>(cpb)->__main_loop();
-}
 #endif

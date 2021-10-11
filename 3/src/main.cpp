@@ -1,10 +1,7 @@
 #include <iostream>
 #include <windows.h>
-#include <vector>
 #include <sstream>
 #include <iomanip>
-
-using vector_str_str = std::vector<std::pair<std::string, std::string>>;
 
 template<class T>
 void cout_name_val(const std::string& name, const T& val) {

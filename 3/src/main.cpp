@@ -2,14 +2,34 @@
 #include <windows.h>
 #include <vector>
 
-void print_mbi(MEMORY_BASIC_INFORMATION* mbi) {
-    std::cout << "\tPVOID  BaseAddress = " << mbi->BaseAddress << std::endl;
-    std::cout << "\tPVOID  AllocationBase = " << mbi->AllocationBase << std::endl;
-    std::cout << "\tDWORD  AllocationProtect = " << mbi->AllocationProtect << std::endl;
-    std::cout << "\tSIZE_T RegionSize = " << mbi->RegionSize << std::endl;
-    std::cout << "\tDWORD  State = " << mbi->State << std::endl;
-    std::cout << "\tDWORD  Protect = " << mbi->Protect << std::endl;
-    std::cout << "\tDWORD  Type = " << mbi->Type << std::endl;
+using vector_str_str = std::vector<std::pair<std::string, std::string>>;
+
+template<class T>
+void cout_name_val(const std::string& name, const T& val) {
+    std::cout << "\t" << name << " = " << val << std::endl;
+}
+
+void print_mbi(const MEMORY_BASIC_INFORMATION& mbi) {
+    cout_name_val("PVOID  BaseAddress      ", mbi.BaseAddress      );
+    cout_name_val("PVOID  AllocationBase   ", mbi.AllocationBase   );
+    cout_name_val("DWORD  AllocationProtect", mbi.AllocationProtect);
+    cout_name_val("SIZE_T RegionSize       ", mbi.RegionSize       );
+    cout_name_val("DWORD  State            ", mbi.State            );
+    cout_name_val("DWORD  Protect          ", mbi.Protect          );
+    cout_name_val("DWORD  Type             ", mbi.Type             );
+}
+
+void print_sysinf(const SYSTEM_INFO& si) {
+    cout_name_val("WORD      wProcessorArchitecture     ", si.wProcessorArchitecture     );
+    cout_name_val("DWORD     dwPageSize                 ", si.dwPageSize                 );
+    cout_name_val("LPVOID    lpMinimumApplicationAddress", si.lpMinimumApplicationAddress);
+    cout_name_val("LPVOID    lpMaximumApplicationAddress", si.lpMaximumApplicationAddress);
+    cout_name_val("DWORD_PTR dwActiveProcessorMask      ", si.dwActiveProcessorMask      );
+    cout_name_val("DWORD     dwNumberOfProcessors       ", si.dwNumberOfProcessors       );
+    cout_name_val("DWORD     dwProcessorType            ", si.dwProcessorType            );
+    cout_name_val("DWORD     dwAllocationGranularity    ", si.dwAllocationGranularity    );
+    cout_name_val("WORD      wProcessorLevel            ", si.wProcessorLevel            );
+    cout_name_val("WORD      wProcessorRevision         ", si.wProcessorRevision         );
 }
 
 int main() {
@@ -20,5 +40,8 @@ int main() {
     VirtualQuery(NULL, &mbi, sysinf.dwPageSize);
 
     std::cout << "mbi = " << std::endl;
-    print_mbi(&mbi);
+    print_mbi(mbi);
+
+    std::cout << "sysinf = " << std::endl;
+    print_sysinf(sysinf);
 }

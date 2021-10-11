@@ -1,15 +1,38 @@
 #include <iostream>
 #include <windows.h>
+#include <vector>
+
+template<class T>
+std::string to_string(T t) {
+    return std::to_string(t);
+}
+
+std::string to_string(LPVOID& lpvoid) {
+    return std::to_string(reinterpret_cast<intptr_t>(lpvoid));
+}
 
 void print_mbi(MEMORY_BASIC_INFORMATION* mbi) {
-    std::cout << "PVOID  BaseAddress = " << mbi->BaseAddress << std::endl;
-    std::cout << "PVOID  AllocationBase = " << mbi->AllocationBase << std::endl;
-    std::cout << "DWORD  AllocationProtect = " << mbi->AllocationProtect << std::endl;
-    // std::cout << "WORD   PartitionId = " << mbi->PartitionId << std::endl;
-    std::cout << "SIZE_T RegionSize = " << mbi->RegionSize << std::endl;
-    std::cout << "DWORD  State = " << mbi->State << std::endl;
-    std::cout << "DWORD  Protect = " << mbi->Protect << std::endl;
-    std::cout << "DWORD  Type = " << mbi->Type << std::endl;
+    std::vector<std::string> names = {
+        "PVOID  BaseAddress = ",
+        "PVOID  AllocationBase = ",
+        "DWORD  AllocationProtect = ",
+        "SIZE_T RegionSize = ",
+        "DWORD  State = ",
+        "DWORD  Protect = ",
+        "DWORD  Type = ",
+    };
+    std::vector<std::string> values = {
+        to_string(mbi->BaseAddress),
+        to_string(mbi->AllocationBase),
+        to_string(mbi->AllocationProtect),
+        to_string(mbi->RegionSize),
+        to_string(mbi->State),
+        to_string(mbi->Protect),
+        to_string(mbi->Type),
+    };
+    for (int i = 0; i < names.size(); i++) {
+        std::cout << "\t" << names[i] << values[i] << std::endl;
+    }
 }
 
 int main() {

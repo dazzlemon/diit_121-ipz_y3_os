@@ -12,7 +12,7 @@ void cout_name_val(const std::string& name, const T& val) {
 template<typename T>
 std::string int_to_hex(T i) {
     std::stringstream stream;
-    stream << std::hex << i;
+    stream << std::showbase << std::hex << i;
     return stream.str();
 }
 
@@ -63,6 +63,16 @@ std::string memory_protection_to_string(const DWORD& mp) {
     throw new std::invalid_argument(mp + " is wrong value for memory protection");
 }
 
+std::string page_type_to_string(const DWORD& type) {
+    switch (type) {
+        case 0x1000000: return "MEM_IMAGE";
+        case 0x40000  : return "MEM_MAPPED";
+        case 0x20000  : return "MEM_PRIVATE";
+        case 0        : return "no access";// my assumption
+    }
+    throw new std::invalid_argument(type + " is wrong value for page type");
+}
+
 void print_mbi(const std::string name, const MEMORY_BASIC_INFORMATION& mbi) {
     std::cout << name << " = " << std::endl;
     cout_name_val("PVOID  BaseAddress      ", ptr_to_str(mbi.BaseAddress                       ));
@@ -71,7 +81,7 @@ void print_mbi(const std::string name, const MEMORY_BASIC_INFORMATION& mbi) {
     cout_name_val("SIZE_T RegionSize       ", int_to_hex(mbi.RegionSize                        ));
     cout_name_val("DWORD  State            ", mbi_state_to_string(mbi.State                    ));
     cout_name_val("DWORD  Protect          ", memory_protection_to_string(mbi.Protect          ));
-    cout_name_val("DWORD  Type             ", mbi.Type                                          );
+    cout_name_val("DWORD  Type             ", page_type_to_string(mbi.Type                     ));
 }
 
 /**

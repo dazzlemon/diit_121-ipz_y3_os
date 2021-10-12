@@ -4,6 +4,8 @@
 #include <iomanip>
 #include <stdexcept>
 
+#define RETURN_CASE(arg) case arg: return #arg
+
 template<class T>
 void cout_name_val(const std::string& name, const T& val) {
     std::cout << "\t" << name << " = " << val << std::endl;
@@ -49,14 +51,14 @@ std::string sysinfo_proc_arch_to_string(const WORD& pa) {
  */
 std::string memory_protection_to_string(const DWORD& mp) {
     switch (mp) {
-        case PAGE_EXECUTE          : return "PAGE_EXECUTE";
-        case PAGE_EXECUTE_READ     : return "PAGE_EXECUTE_READ";
-        case PAGE_EXECUTE_READWRITE: return "PAGE_EXECUTE_READWRITE";
-        case PAGE_EXECUTE_WRITECOPY: return "PAGE_EXECUTE_WRITECOPY";
-        case PAGE_NOACCESS         : return "PAGE_NOACCESS";
-        case PAGE_READONLY         : return "PAGE_READONLY";
-        case PAGE_READWRITE        : return "PAGE_READWRITE";
-        case PAGE_WRITECOPY        : return "PAGE_WRITECOPY";
+        RETURN_CASE(PAGE_EXECUTE);
+        RETURN_CASE(PAGE_EXECUTE_READ);
+        RETURN_CASE(PAGE_EXECUTE_READWRITE);
+        RETURN_CASE(PAGE_EXECUTE_WRITECOPY);
+        RETURN_CASE(PAGE_NOACCESS);
+        RETURN_CASE(PAGE_READONLY);
+        RETURN_CASE(PAGE_READWRITE);
+        RETURN_CASE(PAGE_WRITECOPY);
         case 0x40000000            : return "PAGE_TARAGETS_INVALID or PAGE_TARGETS_NO_UPDATE";
         case 0                     : return "no access";
     }

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <sstream>
 
@@ -15,4 +17,9 @@ std::string int_to_hex(T i) {
 
 std::string ptr_to_str(void* const t_ptr) {
     return t_ptr == 0 ? "NULL" : int_to_hex(t_ptr);
+}
+
+template<class T1, class T2>
+bool intersection(const T1& t1, const T2& t2) {
+    return (t1 & t2) == t1;
 }

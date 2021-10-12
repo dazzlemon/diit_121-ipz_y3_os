@@ -1,6 +1,10 @@
 #include <windows.h>
 #include <string>
 #include <stdexcept>
+#include <iostream>
+#include <vector>
+
+#include "util.h"
 
 #define RETURN_CASE(arg) case arg: return #arg
 
@@ -16,13 +20,7 @@ std::string sysinfo_proc_arch_to_string(const WORD& pa) {
     throw new std::invalid_argument(pa + " is wrong value for processor architecture");
 }
 
-/**
- * modifiers not included
- * 0x100 PAGE_GUARD
- * 0x200 PAGE_NOCACHE
- * 0x400 PAGE_WRITECOMBINE
- */
-std::string memory_protection_to_string(const DWORD& mp) {
+std::string memory_protection_to_string_nomod(const DWORD& mp) {
     switch (mp) {
         RETURN_CASE(PAGE_EXECUTE);
         RETURN_CASE(PAGE_EXECUTE_READ);
@@ -35,7 +33,34 @@ std::string memory_protection_to_string(const DWORD& mp) {
         case 0x40000000: return "PAGE_TARAGETS_INVALID or PAGE_TARGETS_NO_UPDATE";
         case 0         : return "no access";
     }
-    throw new std::invalid_argument(mp + " is wrong value for memory protection");
+    throw new std::invalid_argument(mp + " is wrong value for memory protection without modifier");
+}
+
+std::string memory_protection_modifier_to_string(const DWORD& mod) {
+    switch (mod) {
+        RETURN_CASE(PAGE_GUARD);
+        RETURN_CASE(PAGE_NOCACHE);
+        RETURN_CASE(PAGE_WRITECOMBINE);
+    }
+    throw new std::invalid_argument(int_to_hex(mod) + " is wrong value for memory protection modifier");
+}
+
+DWORD memory_protection_modifier(const DWORD& mp) {
+    std::vector<DWORD> modifiers = {PAGE_GUARD, PAGE_NOCACHE, PAGE_WRITECOMBINE};
+    for (auto i : modifiers) {
+        if (intersection(i, mp)) {
+            return i;
+        }
+    }
+    return 0;
+}
+
+std::string memory_protection_to_string(DWORD mp) {
+    DWORD mod = memory_protection_modifier(mp);
+    mp -= mod;
+    std::string mp_str = memory_protection_to_string_nomod(mp);
+    return mod ? mp_str + " & " + memory_protection_modifier_to_string(mod)
+               : mp_str;
 }
 
 std::string page_type_to_string(const DWORD& type) {

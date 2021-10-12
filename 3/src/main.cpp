@@ -17,21 +17,19 @@ int main() {
     GetSystemInfo(&sysinf);
     print_sysinf("sysinf", sysinf);
 
-    MEMORY_BASIC_INFORMATION mbi;
-    VirtualQuery(NULL, &mbi, sysinf.dwPageSize);
-    print_mbi("mbi", mbi);
-
     HANDLE h_process = GetCurrentProcess();
     PROCESS_MEMORY_COUNTERS pmc;
     GetProcessMemoryInfo(h_process, &pmc, sizeof(pmc));
     print_pmc("pmc", pmc);
 
-    // DWORD dword_max = std::numeric_limits<DWORD>::max();
-    // for (
-    //     DWORD address = NULL;
-    //     VirtualQuery(reinterpret_cast<LPVOID>(address), &mbi, sysinf.dwPageSize) && address <= dword_max;
-    //     address += mbi.RegionSize
-    // ) {
-    //     print_mbi("mbi", mbi);
-    // }
+    MEMORY_BASIC_INFORMATION mbi;
+    DWORD dword_max = std::numeric_limits<DWORD>::max();
+    for (
+        DWORD address = NULL, i = 0;
+        VirtualQuery(reinterpret_cast<LPVOID>(address), &mbi, sysinf.dwPageSize) && 
+            address <= dword_max && i < 20;
+        address += mbi.RegionSize, i++
+    ) {
+        print_mbi("mbi" + std::to_string(i), mbi);
+    }
 }

@@ -8,13 +8,13 @@
 
 void print_mbi(const std::string& name, const MEMORY_BASIC_INFORMATION& mbi) {
     std::cout << name << " = " << std::endl;
-    cout_name_val("PVOID  BaseAddress      ", ptr_to_str(mbi.BaseAddress                       ));
-    cout_name_val("PVOID  AllocationBase   ", ptr_to_str(mbi.AllocationBase                    ));
+    // cout_name_val("PVOID  BaseAddress      ", ptr_to_str(mbi.BaseAddress                       ));
+    // cout_name_val("PVOID  AllocationBase   ", ptr_to_str(mbi.AllocationBase                    ));
     cout_name_val("DWORD  AllocationProtect", memory_protection_to_string(mbi.AllocationProtect));
     cout_name_val("SIZE_T RegionSize       ", int_to_hex(mbi.RegionSize                        ));
     cout_name_val("DWORD  State            ", mbi_state_to_string(mbi.State                    ));
     cout_name_val("DWORD  Protect          ", memory_protection_to_string(mbi.Protect          ));
-    cout_name_val("DWORD  Type             ", page_type_to_string(mbi.Type                     ));
+    // cout_name_val("DWORD  Type             ", page_type_to_string(mbi.Type                     ));
 }
 
 /**

@@ -1,9 +1,12 @@
 #include <iostream>
 
+#include <windows.h>
+#include <psapi.h>
+
 #include "winapi_def_objects_str.h"
 #include "util.h"
 
-void print_mbi(const std::string name, const MEMORY_BASIC_INFORMATION& mbi) {
+void print_mbi(const std::string& name, const MEMORY_BASIC_INFORMATION& mbi) {
     std::cout << name << " = " << std::endl;
     cout_name_val("PVOID  BaseAddress      ", ptr_to_str(mbi.BaseAddress                       ));
     cout_name_val("PVOID  AllocationBase   ", ptr_to_str(mbi.AllocationBase                    ));
@@ -17,7 +20,7 @@ void print_mbi(const std::string name, const MEMORY_BASIC_INFORMATION& mbi) {
 /**
  * obsolete members skipped
  */
-void print_sysinf(const std::string name, const SYSTEM_INFO& si) {
+void print_sysinf(const std::string& name, const SYSTEM_INFO& si) {
     std::cout << name << " = " << std::endl;
     cout_name_val("WORD      wProcessorArchitecture     ",
         sysinfo_proc_arch_to_string(si.wProcessorArchitecture                                       ));
@@ -29,4 +32,17 @@ void print_sysinf(const std::string name, const SYSTEM_INFO& si) {
     cout_name_val("DWORD     dwAllocationGranularity    ", int_to_hex(si.dwAllocationGranularity    ));
     cout_name_val("WORD      wProcessorLevel            ", si.wProcessorLevel                        );
     cout_name_val("WORD      wProcessorRevision         ", si.wProcessorRevision                     );
+}
+
+void print_pmc(const std::string& name, const PROCESS_MEMORY_COUNTERS& pmc) {
+    std::cout << name << " = " << std::endl;
+    cout_name_val("DWORD  PageFaultCount            ", pmc.PageFaultCount                        );
+    cout_name_val("SIZE_T PeakWorkingSetSize        ", int_to_hex(pmc.PeakWorkingSetSize        ));
+    cout_name_val("SIZE_T WorkingSetSize            ", int_to_hex(pmc.WorkingSetSize            ));
+    cout_name_val("SIZE_T QuotaPeakPagedPoolUsage   ", int_to_hex(pmc.QuotaPeakPagedPoolUsage   ));
+    cout_name_val("SIZE_T QuotaPagedPoolUsage       ", int_to_hex(pmc.QuotaPagedPoolUsage       ));
+    cout_name_val("SIZE_T QuotaPeakNonPagedPoolUsage", int_to_hex(pmc.QuotaPeakNonPagedPoolUsage));
+    cout_name_val("SIZE_T QuotaNonPagedPoolUsage    ", int_to_hex(pmc.QuotaNonPagedPoolUsage    ));
+    cout_name_val("SIZE_T PagefileUsage             ", int_to_hex(pmc.PagefileUsage             )); 
+    cout_name_val("SIZE_T PeakPagefileUsage         ", int_to_hex(pmc.PeakPagefileUsage         ));
 }

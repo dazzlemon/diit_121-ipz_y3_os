@@ -44,6 +44,14 @@ void operator delete(void* p) {
     }
 }
 
+void test_memory_protection() {
+    // todo
+}
+
+void test_granularity() {
+    // todo
+}
+
 int main() {
     heap_init();
 
@@ -66,4 +74,7 @@ int main() {
     ) {
         print_mbi("mbi" + std::to_string(i), mbi);
     }
+
+    test_memory_protection();
+    test_granularity();
 }

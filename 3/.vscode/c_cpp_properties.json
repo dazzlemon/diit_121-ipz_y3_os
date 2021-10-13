@@ -15,7 +15,8 @@
         {
             "name": "win32",
             "includePath": [
-                "${default}"
+                "${default}",
+                "/usr/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

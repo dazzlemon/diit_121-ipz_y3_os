@@ -9,6 +9,9 @@
 #include <psapi.h>
 
 #include "winapi_objects_cout.h"
+#include "generator.h"
+
+using MBI = MEMORY_BASIC_INFORMATION;
 
 HANDLE heap;
 
@@ -44,7 +47,7 @@ void operator delete(void* p) {
     }
 }
 
-LPVOID find_page(const SYSTEM_INFO& sysinf, DWORD protection) {
+Generator<MBI> pages(const SYSTEM_INFO& sysinf) {
     LPVOID addr = NULL;
     MEMORY_BASIC_INFORMATION mbi;
     DWORD dword_max = std::numeric_limits<DWORD>::max();
@@ -54,12 +57,17 @@ LPVOID find_page(const SYSTEM_INFO& sysinf, DWORD protection) {
             address <= dword_max && !addr;
         address += mbi.RegionSize, i++
     ) {
-        if (mbi.Protect == protection) {
-            addr = mbi.BaseAddress;
-            // print_mbi("mbi", mbi);
+        co_yield mbi;
+    }
+}
+
+LPVOID find_page(const SYSTEM_INFO& sysinf, DWORD protection) {
+    for (auto&& i: pages(sysinf)) {
+        if (i.Protect == protection) {
+            return i.BaseAddress;
         }
     }
-    return addr;
+    return NULL;
 }
 
 void test_memory_protection_(LPVOID addr) {

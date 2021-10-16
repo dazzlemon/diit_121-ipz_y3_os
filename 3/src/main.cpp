@@ -62,7 +62,7 @@ LPVOID find_page(const SYSTEM_INFO& sysinf, DWORD protection) {
     return addr;
 }
 
-void test_memory_protection(LPVOID addr) {
+void test_memory_protection_(LPVOID addr) {
     // read
     int _ = *reinterpret_cast<int*>(addr);
     std::cout << "read successfull" << std::endl;
@@ -71,8 +71,45 @@ void test_memory_protection(LPVOID addr) {
     std::cout << "write successfull" << std::endl;
 }
 
+void test_memory_protection(int argc, char* argv[], const SYSTEM_INFO& sysinf) {
+    if (argc == 2) {
+        DWORD mp = 0x0;
+        int arg = std::stoi(argv[1]);
+        switch (arg) {
+            case 1: mp = PAGE_READONLY;  break;
+            case 2: mp = PAGE_READWRITE; break;
+            case 3: mp = PAGE_NOACCESS;  break;
+            default:
+                std::cout << "incorrect arg: " << argv[1]  << std::endl;
+                break;
+        }
+        if (mp != 0x0) {
+            std::cout << "testing page with protection: "
+                      << memory_protection_to_string(mp) << std::endl;
+            auto page_addr = find_page(sysinf, mp);
+            test_memory_protection_(page_addr);
+        }
+    } else {
+        std::cout << "incorrect amount of args" << std::endl;
+    }
+}
+
 void test_granularity() {
     // todo
+}
+
+void print_memory_map(const SYSTEM_INFO& sysinf) {
+    MEMORY_BASIC_INFORMATION mbi;
+    DWORD dword_max = std::numeric_limits<DWORD>::max();
+    DWORD pages_max = 20;
+    for (
+        DWORD address = NULL, i = 0;
+        VirtualQuery(reinterpret_cast<LPVOID>(address), &mbi, sysinf.dwPageSize) && 
+            address <= dword_max && i < pages_max;
+        address += mbi.RegionSize, i++
+    ) {
+        print_mbi("mbi" + std::to_string(i), mbi);
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -87,37 +124,8 @@ int main(int argc, char* argv[]) {
     GetProcessMemoryInfo(h_process, &pmc, sizeof(pmc));
     print_pmc("pmc", pmc);
 
-    MEMORY_BASIC_INFORMATION mbi;
-    DWORD dword_max = std::numeric_limits<DWORD>::max();
-    DWORD pages_max = 20;
-    for (
-        DWORD address = NULL, i = 0;
-        VirtualQuery(reinterpret_cast<LPVOID>(address), &mbi, sysinf.dwPageSize) && 
-            address <= dword_max && i < pages_max;
-        address += mbi.RegionSize, i++
-    ) {
-        print_mbi("mbi" + std::to_string(i), mbi);
-    }
-
-    if (argc == 2) {
-        DWORD mp = 0x0;
-        int arg = std::stoi(argv[1]);
-        switch (arg) {
-            case 1: mp = PAGE_READONLY; break;
-            case 2: mp = PAGE_READWRITE; break;
-            case 3: mp = PAGE_NOACCESS; break;
-            default:
-                std::cout << "incorrect arg: " << argv[1]  << std::endl;
-                break;
-        }
-        if (mp != 0x0) {
-            std::cout << "testing page with protection: "
-                      << memory_protection_to_string(mp) << std::endl;
-            auto page_addr = find_page(sysinf, mp);
-            test_memory_protection(page_addr);
-        }
-    } else {
-        std::cout << "incorrect amount of args" << std::endl;
-    }
+    print_memory_map(sysinf);
+    
+    test_memory_protection(argc, argv, sysinf);
     test_granularity();
 }

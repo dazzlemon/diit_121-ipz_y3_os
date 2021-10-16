@@ -4,6 +4,7 @@
 #include <limits>
 #include <stdexcept>
 #include <system_error>
+#include <algorithm>
 
 #include <windows.h>
 #include <psapi.h>
@@ -62,12 +63,16 @@ Generator<MBI> pages(const SYSTEM_INFO& sysinf) {
 }
 
 LPVOID find_page(const SYSTEM_INFO& sysinf, DWORD protection) {
-    for (auto&& i: pages(sysinf)) {
-        if (i.Protect == protection) {
-            return i.BaseAddress;
-        }
-    }
-    return NULL;
+    auto p = pages(sysinf);
+    auto res = std::find_if(p.begin(), p.end(), [&](MBI mbi) {return mbi.Protect == protection;});
+    return res == p.end() ? NULL
+                          : res->BaseAddress;
+    // for (auto&& i: pages(sysinf)) {
+    //     if (i.Protect == protection) {
+    //         return i.BaseAddress;
+    //     }
+    // }
+    // return NULL;
 }
 
 void test_memory_protection_(LPVOID addr) {

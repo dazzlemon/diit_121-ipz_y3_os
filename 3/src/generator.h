@@ -96,7 +96,7 @@ struct Generator<T>::Iterator {
     promise_coro_handle coroHandle;
 
     bool operator==(const Iterator& other) const {
-        return this->coroHandle == other;
+        return this->coroHandle == other.coroHandle;
     }
 
     bool operator!=(const Iterator& other) const {

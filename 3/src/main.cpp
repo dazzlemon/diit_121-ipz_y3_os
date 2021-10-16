@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <system_error>
 #include <algorithm>
-#include <ranges>
 
 #include <windows.h>
 #include <psapi.h>
@@ -13,7 +12,6 @@
 #include "winapi_objects_cout.h"
 #include "generator.h"
 
-namespace rv = std::ranges::views;
 using MBI = MEMORY_BASIC_INFORMATION;
 
 HANDLE heap;
@@ -51,13 +49,12 @@ void operator delete(void* p) {
 }
 
 Generator<MBI> pages(const SYSTEM_INFO& sysinf) {
-    LPVOID addr = NULL;
     MEMORY_BASIC_INFORMATION mbi;
     DWORD dword_max = std::numeric_limits<DWORD>::max();
     for (
         DWORD address = NULL, i = 0;
-        VirtualQuery(reinterpret_cast<LPVOID>(address), &mbi, sysinf.dwPageSize) && 
-            address <= dword_max && !addr;
+        VirtualQuery(reinterpret_cast<LPVOID>(address), &mbi, sizeof(MBI)) && 
+            address <= dword_max;
         address += mbi.RegionSize, i++
     ) {
         co_yield mbi;
@@ -103,8 +100,12 @@ void test_memory_protection(int argc, char* argv[], const SYSTEM_INFO& sysinf) {
     }
 }
 
-void test_granularity() {
-    // todo
+void test_granularity(const SYSTEM_INFO& sysinf) {
+    LPVOID addr = VirtualAlloc(NULL, NULL, MEM_COMMIT, PAGE_READWRITE);
+    MBI mbi;
+    VirtualQuery(addr, &mbi, sizeof(MBI));
+    std::cout << "Tried to allocate 0 bytes, got " 
+              << int_to_hex(mbi.RegionSize) << " bytes" << std::endl;
 }
 
 void print_memory_map(const SYSTEM_INFO& sysinf) {
@@ -116,17 +117,6 @@ void print_memory_map(const SYSTEM_INFO& sysinf) {
         }
         print_mbi("mbi" + std::to_string(i++), m);
     }
-    // MEMORY_BASIC_INFORMATION mbi;
-    // DWORD dword_max = std::numeric_limits<DWORD>::max();
-    // DWORD pages_max = 20;
-    // for (
-    //     DWORD address = NULL, i = 0;
-    //     VirtualQuery(reinterpret_cast<LPVOID>(address), &mbi, sysinf.dwPageSize) && 
-    //         address <= dword_max && i < pages_max;
-    //     address += mbi.RegionSize, i++
-    // ) {
-    //     print_mbi("mbi" + std::to_string(i), mbi);
-    // }
 }
 
 int main(int argc, char* argv[]) {
@@ -144,5 +134,5 @@ int main(int argc, char* argv[]) {
     print_memory_map(sysinf);
     
     test_memory_protection(argc, argv, sysinf);
-    test_granularity();
+    test_granularity(sysinf);
 }

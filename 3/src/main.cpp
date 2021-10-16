@@ -110,7 +110,7 @@ void test_granularity(const SYSTEM_INFO& sysinf) {
 
 void print_memory_map(const SYSTEM_INFO& sysinf) {
     size_t i = 0;
-    size_t pages_max = 20;
+    size_t pages_max = 10;
     for (auto m : pages(sysinf)) {
         if (i >= pages_max) {
             return;
@@ -132,7 +132,6 @@ int main(int argc, char* argv[]) {
     print_pmc("pmc", pmc);
 
     print_memory_map(sysinf);
-    
     test_memory_protection(argc, argv, sysinf);
     test_granularity(sysinf);
 }

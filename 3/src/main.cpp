@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <system_error>
 #include <algorithm>
+#include <ranges>
 
 #include <windows.h>
 #include <psapi.h>
@@ -12,6 +13,7 @@
 #include "winapi_objects_cout.h"
 #include "generator.h"
 
+namespace rv = std::ranges::views;
 using MBI = MEMORY_BASIC_INFORMATION;
 
 HANDLE heap;
@@ -67,12 +69,6 @@ LPVOID find_page(const SYSTEM_INFO& sysinf, DWORD protection) {
     auto res = std::find_if(p.begin(), p.end(), [&](MBI mbi) {return mbi.Protect == protection;});
     return res == p.end() ? NULL
                           : res->BaseAddress;
-    // for (auto&& i: pages(sysinf)) {
-    //     if (i.Protect == protection) {
-    //         return i.BaseAddress;
-    //     }
-    // }
-    // return NULL;
 }
 
 void test_memory_protection_(LPVOID addr) {
@@ -112,17 +108,25 @@ void test_granularity() {
 }
 
 void print_memory_map(const SYSTEM_INFO& sysinf) {
-    MEMORY_BASIC_INFORMATION mbi;
-    DWORD dword_max = std::numeric_limits<DWORD>::max();
-    DWORD pages_max = 20;
-    for (
-        DWORD address = NULL, i = 0;
-        VirtualQuery(reinterpret_cast<LPVOID>(address), &mbi, sysinf.dwPageSize) && 
-            address <= dword_max && i < pages_max;
-        address += mbi.RegionSize, i++
-    ) {
-        print_mbi("mbi" + std::to_string(i), mbi);
+    size_t i = 0;
+    size_t pages_max = 20;
+    for (auto m : pages(sysinf)) {
+        if (i >= pages_max) {
+            return;
+        }
+        print_mbi("mbi" + std::to_string(i++), m);
     }
+    // MEMORY_BASIC_INFORMATION mbi;
+    // DWORD dword_max = std::numeric_limits<DWORD>::max();
+    // DWORD pages_max = 20;
+    // for (
+    //     DWORD address = NULL, i = 0;
+    //     VirtualQuery(reinterpret_cast<LPVOID>(address), &mbi, sysinf.dwPageSize) && 
+    //         address <= dword_max && i < pages_max;
+    //     address += mbi.RegionSize, i++
+    // ) {
+    //     print_mbi("mbi" + std::to_string(i), mbi);
+    // }
 }
 
 int main(int argc, char* argv[]) {

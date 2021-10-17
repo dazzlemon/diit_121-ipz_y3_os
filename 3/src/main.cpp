@@ -1,9 +1,6 @@
 #define NOMINMAX
 
 #include <iostream>
-#include <limits>
-#include <stdexcept>
-#include <system_error>
 #include <algorithm>
 
 #include <windows.h>
@@ -11,52 +8,10 @@
 
 #include "winapi_objects_cout.h"
 #include "generator.h"
+#include "util.h"
+#include "win_memory_handling.h"
 
 using MBI = MEMORY_BASIC_INFORMATION;
-
-HANDLE heap;
-
-void heap_init() {
-    heap = HeapCreate(0, 0, 0);
-    if (!heap) {
-        throw new std::system_error(
-            GetLastError(), std::system_category(), "Error while trying to create new heap");
-    }
-}
-
-void* operator new(size_t size) {
-    // auto result = VirtualAlloc(NULL, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    // if (result) {
-    //     return result;
-    // }
-    // throw new std::system_error(
-    //     GetLastError(), std::system_category(), "Error while trying to allocate memory");
-    
-    auto result = HeapAlloc(heap, 0, size);
-    if (result) {
-        return result;
-    }
-    throw new std::system_error(
-        -1, std::system_category(), "Error while trying to allocate memory");
-}
-
-void operator delete(void* p) {
-    // if (!VirtualFree(p, 0, MEM_RELEASE)) {
-    if (!HeapFree(heap, 0, p)) {
-        throw new std::system_error(
-            GetLastError(), std::system_category(), "Error while trying to release memory");
-    }
-}
-
-bool no_overflow_add(DWORD& a, const DWORD& b) {
-    if (!b) {
-    return true;
-    }
-    DWORD new_ = a + b;
-    bool res = new_ > a;
-    a = new_;
-    return res;
-}
 
 Generator<MBI> pages(const SYSTEM_INFO& sysinf) {
     MBI mbi;

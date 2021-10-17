@@ -48,14 +48,22 @@ void operator delete(void* p) {
     }
 }
 
+bool no_overflow_add(DWORD& a, const DWORD& b) {
+    if (!b) {
+    return true;
+    }
+    DWORD new_ = a + b;
+    bool res = new_ > a;
+    a = new_;
+    return res;
+}
+
 Generator<MBI> pages(const SYSTEM_INFO& sysinf) {
-    MEMORY_BASIC_INFORMATION mbi;
-    DWORD dword_max = std::numeric_limits<DWORD>::max();
+    MBI mbi;
     for (
-        DWORD address = NULL, i = 0;
+        DWORD address = NULL;
         VirtualQuery(reinterpret_cast<LPVOID>(address), &mbi, sizeof(MBI)) && 
-            address <= dword_max;
-        address += mbi.RegionSize, i++
+            no_overflow_add(address, mbi.RegionSize);
     ) {
         co_yield mbi;
     }
@@ -132,6 +140,6 @@ int main(int argc, char* argv[]) {
     print_pmc("pmc", pmc);
 
     print_memory_map(sysinf);
-    test_memory_protection(argc, argv, sysinf);
     test_granularity(sysinf);
+    test_memory_protection(argc, argv, sysinf);
 }

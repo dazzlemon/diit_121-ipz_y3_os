@@ -3,8 +3,8 @@
 #include <list>
 #include <vector>
 
-#define BUFFER_SIZE 4
-#define ITERATIONS_NUMBER 20
+#define CHUNKSIZE 4
+#define ITERS 20
 
 HANDLE mutex, empty, full;
 
@@ -35,7 +35,7 @@ void consume_item() {
 
 
 DWORD WINAPI ProducerThreadProc(PVOID p) {
-    for (size_t i = 0, local_buffer = 1; i < ITERATIONS_NUMBER; i++) {
+    for (size_t i = 0, chunk_i = 1; i < ITERS; i++) {
         WaitForSingleObject(empty, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
 
@@ -44,11 +44,11 @@ DWORD WINAPI ProducerThreadProc(PVOID p) {
 
         ReleaseSemaphore(mutex, 1, NULL);
 
-        if (local_buffer >= BUFFER_SIZE) {
-            local_buffer = 1;
-            ReleaseSemaphore(full, BUFFER_SIZE, NULL);
+        if (chunk_i >= CHUNKSIZE) {
+            chunk_i = 1;
+            ReleaseSemaphore(full, CHUNKSIZE, NULL);
         } else {
-            local_buffer++;
+            chunk_i++;
         }
         Sleep(500);
     }
@@ -56,7 +56,7 @@ DWORD WINAPI ProducerThreadProc(PVOID p) {
 }
 
 DWORD WINAPI ConsumerThreadProc(PVOID p) {
-    for (size_t i = 0, local_buffer = 1; i < ITERATIONS_NUMBER; i++) {
+    for (size_t i = 0, chunk_i = 1; i < ITERS; i++) {
         WaitForSingleObject(full, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
 
@@ -65,12 +65,12 @@ DWORD WINAPI ConsumerThreadProc(PVOID p) {
 
         ReleaseSemaphore(mutex, 1, NULL);
 
-        if (local_buffer >= BUFFER_SIZE) {
-            local_buffer = 1;
-            ReleaseSemaphore(empty, BUFFER_SIZE, NULL);
+        if (chunk_i >= CHUNKSIZE) {
+            chunk_i = 1;
+            ReleaseSemaphore(empty, CHUNKSIZE, NULL);
         }
         else {
-            local_buffer++;
+            chunk_i++;
         }
         Sleep(500);
     }
@@ -79,8 +79,8 @@ DWORD WINAPI ConsumerThreadProc(PVOID p) {
 
 int main(int argc, char* argv[]) {
     mutex = CreateSemaphore(NULL, 1, 1, NULL);
-    empty = CreateSemaphore(NULL, BUFFER_SIZE, BUFFER_SIZE, NULL);
-    full = CreateSemaphore(NULL, 0, BUFFER_SIZE, NULL);
+    empty = CreateSemaphore(NULL, CHUNKSIZE, CHUNKSIZE, NULL);
+    full = CreateSemaphore(NULL, 0, CHUNKSIZE, NULL);
 
     HANDLE ProducerThread;
     HANDLE ConsumerThread;

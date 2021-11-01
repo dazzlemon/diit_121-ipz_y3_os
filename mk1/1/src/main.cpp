@@ -38,10 +38,11 @@ int main(int argc, char* argv[]) {
         std::string command_line_reader = std::string(argv[0]) + " " + argv[1] + " reader mutex";
         std::string command_line_writer = std::string(argv[0]) + " " + argv[1] + " writer mutex";
 
-        // std::cout << command_line_reader << std::endl;
-        // std::cout << command_line_writer << std::endl;
+        std::cout << command_line_reader << std::endl;
+        std::cout << command_line_writer << std::endl;
 
         auto si = STARTUPINFO();
+        PROCESS_INFORMATION pi;
 
         CreateProcess(
             /*lpApplicationName   */ NULL,
@@ -53,7 +54,7 @@ int main(int argc, char* argv[]) {
             /*lpEnvironment       */ NULL,
             /*lpCurrentDirectory  */ NULL,
             /*lpStartupInfo       */ &si,
-            /*lpProcessInformation*/ NULL);
+            /*lpProcessInformation*/ &pi);
         CreateProcess(
             /*lpApplicationName   */ NULL,
             /*lpCommandLine       */ strdup(command_line_writer.c_str()),
@@ -64,7 +65,7 @@ int main(int argc, char* argv[]) {
             /*lpEnvironment       */ NULL,
             /*lpCurrentDirectory  */ NULL,
             /*lpStartupInfo       */ &si,
-            /*lpProcessInformation*/ NULL);
+            /*lpProcessInformation*/ &pi);
     } else if (argc == 4) {// reader or writer
         auto filename     = argv[1];
         auto process_type = argv[2];
@@ -75,12 +76,12 @@ int main(int argc, char* argv[]) {
                   << argv[2] << " "
                   << argv[3] << " ";
 
-        if (process_type == "reader") {
+        if (std::string(process_type) == "reader") {
             reader(mutexname, filename);
-        } else if (process_type == "writer") {
+        } else if (std::string(process_type) == "writer") {
             writer(mutexname, filename);
         } else {
-            std::cout << "wrong process type" << std::endl;
+            std::cout << "wrong process type" << "\'" << process_type << "\'" << std::endl;
         }
     } else {
         std::cout << "wrong amount of arguments" << std::endl;

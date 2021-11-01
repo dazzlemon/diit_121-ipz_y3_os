@@ -1,26 +1,24 @@
 #include <windows.h>
 #include <iostream>
 
-void reader(char mutex_name[], char filename[]) {
-    HANDLE mutex = OpenMutex(MUTEX_ALL_ACCESS, false, mutex_name);
+#define ITERS 10
 
-    do {
+void reader(HANDLE mutex, HANDLE file) {
+    for (int i = 0; i < ITERS; i++) {
         WaitForSingleObject(mutex, INFINITE);
         std::cout << "reader" << std::endl; 
-        // reading data
+        ReadFile(file, NULL, 0, NULL, NULL);
         ReleaseMutex(mutex);
-    } while (true);
+    }
 }
 
-void writer(char mutex_name[], char filename[]) {
-    HANDLE mutex = OpenMutex(MUTEX_ALL_ACCESS, false, mutex_name);
-
-    do {
+void writer(HANDLE mutex, HANDLE file) {
+    for (int i = 0; i < ITERS; i++) {
         WaitForSingleObject(mutex, INFINITE);
         std::cout << "writer" << std::endl; 
-        // writing data
+        WriteFile(file, NULL, 0, NULL, NULL);
         ReleaseMutex(mutex);
-    } while (true);
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -37,9 +35,6 @@ int main(int argc, char* argv[]) {
         std::string filename = argv[1];
         std::string command_line_reader = std::string(argv[0]) + " " + argv[1] + " reader mutex";
         std::string command_line_writer = std::string(argv[0]) + " " + argv[1] + " writer mutex";
-
-        std::cout << command_line_reader << std::endl;
-        std::cout << command_line_writer << std::endl;
 
         auto si = STARTUPINFO();
         PROCESS_INFORMATION pi;
@@ -71,15 +66,13 @@ int main(int argc, char* argv[]) {
         auto process_type = argv[2];
         auto mutexname    = argv[3];
 
-        std::cout << argv[0] << " "
-                  << argv[1] << " "
-                  << argv[2] << " "
-                  << argv[3] << " ";
+        HANDLE mutex = OpenMutex(MUTEX_ALL_ACCESS, false, mutexname);
+        HANDLE file  = CreateFile(filename, GENERIC_READ | GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
         if (std::string(process_type) == "reader") {
-            reader(mutexname, filename);
+            reader(mutex, file);
         } else if (std::string(process_type) == "writer") {
-            writer(mutexname, filename);
+            writer(mutex, file);
         } else {
             std::cout << "wrong process type" << "\'" << process_type << "\'" << std::endl;
         }

@@ -6,41 +6,31 @@
 #define CHUNKSIZE 4
 #define ITERS 20
 
-HANDLE mutex, empty, full;
+HANDLE mutex;
+HANDLE empty;
+HANDLE full;
 
 int counter = 0;
-int item;
+std::vector<int> buffer;
 
-std::vector<int> items_list;
-
-int produce_item() {
+void produce_item() {
     int number = ++counter;
     std::cout << "produce item: " << number << "\n";
-    return number;
-}
-
-void put_item(int item) {
-    std::cout << "item was put: " << item << "\n";
-    items_list.push_back(item);
-}
-
-void get_item() {
-    std::cout << "get item: " << items_list.back() << "\n";
+    buffer.push_back(number);
 }
 
 void consume_item() {
-    std::cout << "item consumed" << std::endl;
-    items_list.pop_back();
+    std::cout << "item consumed: " << buffer.back() << std::endl;
+    buffer.pop_back();
 }
 
 
-DWORD WINAPI ProducerThreadProc(PVOID p) {
+DWORD producer(void*) {
     for (size_t i = 0, chunk_i = 1; i < ITERS; i++) {
         WaitForSingleObject(empty, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
 
-        item = produce_item();
-        put_item(item);
+        produce_item();
 
         ReleaseSemaphore(mutex, 1, NULL);
 
@@ -55,12 +45,11 @@ DWORD WINAPI ProducerThreadProc(PVOID p) {
     return 0;
 }
 
-DWORD WINAPI ConsumerThreadProc(PVOID p) {
+DWORD consumer(void*) {
     for (size_t i = 0, chunk_i = 1; i < ITERS; i++) {
         WaitForSingleObject(full, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
 
-        get_item();
         consume_item();
 
         ReleaseSemaphore(mutex, 1, NULL);
@@ -80,13 +69,10 @@ DWORD WINAPI ConsumerThreadProc(PVOID p) {
 int main(int argc, char* argv[]) {
     mutex = CreateSemaphore(NULL, 1, 1, NULL);
     empty = CreateSemaphore(NULL, CHUNKSIZE, CHUNKSIZE, NULL);
-    full = CreateSemaphore(NULL, 0, CHUNKSIZE, NULL);
+    full  = CreateSemaphore(NULL, 0, CHUNKSIZE, NULL);
 
-    HANDLE ProducerThread;
-    HANDLE ConsumerThread;
-
-    ProducerThread = CreateThread(NULL, 1024, ProducerThreadProc, NULL, 0, NULL);
-    ConsumerThread = CreateThread(NULL, 1024, ConsumerThreadProc, NULL, 0, NULL);
+    HANDLE producer_thread = CreateThread(NULL, 1024, producer, NULL, 0, NULL);
+    HANDLE consumer_thread = CreateThread(NULL, 1024, consumer, NULL, 0, NULL);
 
     while (true) {}
 }

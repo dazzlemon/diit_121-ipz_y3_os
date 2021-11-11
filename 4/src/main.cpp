@@ -11,9 +11,6 @@
 #include "MainWindow.h" 
 
 #define CHUNKSIZE 30
-#define SLEEPTIME_ 100
-#define MINSLEEP 50
-#define SLEEPTIME SLEEPTIME_ + MINSLEEP
 
 HANDLE mutex;
 HANDLE empty;
@@ -44,6 +41,10 @@ void consume_item() {
     buffer.pop_front();
 }
 
+void wait() {
+    Sleep(1000 / w->tickrate);
+}
+
 DWORD __stdcall producer(void*) {
     while (true) {
         WaitForSingleObject(empty, INFINITE);
@@ -51,7 +52,7 @@ DWORD __stdcall producer(void*) {
 
         produce_item();
         updateBufferList();
-        Sleep(SLEEPTIME);
+        wait();
 
         ReleaseSemaphore(mutex, 1, NULL);
         ReleaseSemaphore(full,  1, NULL);
@@ -65,7 +66,7 @@ DWORD __stdcall consumer(void*) {
 
         consume_item();
         updateBufferList();
-        Sleep(SLEEPTIME);
+        wait();
 
         ReleaseSemaphore(mutex, 1, NULL);
         ReleaseSemaphore(empty, 1, NULL);

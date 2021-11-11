@@ -24,16 +24,8 @@ QApplication* a;
 MainWindow* w;
 
 void updateBufferList() {
-    QWidget* centralWidget = w->findChild<QWidget*>("centralwidget");
-    if (centralWidget == NULL) {
-        qDebug() << "centralWidget is NULL";
-        return;
-    }
-    QListWidget* bufferListWidget = centralWidget->findChild<QListWidget*>("bufferListWidget");
-    if (bufferListWidget == NULL) {
-        qDebug() << "bufferListWidget is NULL";
-        return;
-    }
+    QListWidget* bufferListWidget = w->findChild<QWidget*>("centralwidget")
+                                    ->findChild<QListWidget*>("bufferListWidget");
     bufferListWidget->clear();
     for (auto i : buffer) {
         bufferListWidget->addItem(QString::number(i));

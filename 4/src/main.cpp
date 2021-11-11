@@ -11,7 +11,6 @@
 #include "MainWindow.h" 
 
 #define CHUNKSIZE 30
-#define ITERS 1000
 #define SLEEPTIME 100
 
 HANDLE mutex;
@@ -44,7 +43,8 @@ void consume_item() {
 }
 
 DWORD __stdcall producer(void*) {
-    for (size_t i = 0, chunk_i = 1; i < ITERS; i++) {
+    size_t chunk_i = 1;
+    while (true) {
         WaitForSingleObject(empty, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
 
@@ -61,11 +61,11 @@ DWORD __stdcall producer(void*) {
         }
         Sleep(SLEEPTIME);
     }
-    return 0;
 }
 
 DWORD __stdcall consumer(void*) {
-    for (size_t i = 0, chunk_i = 1; i < ITERS; i++) {
+    size_t chunk_i = 1;
+    while (true) {
         WaitForSingleObject(full, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
 
@@ -82,7 +82,6 @@ DWORD __stdcall consumer(void*) {
         }
         Sleep(SLEEPTIME);
     }
-    return 0;
 }
 
 int argc_; char** argv_;

@@ -8,8 +8,11 @@ QT_END_NAMESPACE
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
+    int tickrate;
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 private:
     Ui::MainWindow *ui;
+private slots:
+    void speedSliderChanged(int value);
 };

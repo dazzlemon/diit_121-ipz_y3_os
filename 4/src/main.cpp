@@ -5,13 +5,15 @@
 
 #include <windows.h>
 
-#include <list>
 #include <deque>
+#include <vector>
 
 #include "MainWindow.h" 
 
 #define CHUNKSIZE 30
-#define SLEEPTIME 50
+#define SLEEPTIME_ 100
+#define MINSLEEP 50
+#define SLEEPTIME SLEEPTIME_ + MINSLEEP
 
 HANDLE mutex;
 HANDLE empty;
@@ -49,10 +51,10 @@ DWORD __stdcall producer(void*) {
 
         produce_item();
         updateBufferList();
+        Sleep(SLEEPTIME);
 
         ReleaseSemaphore(mutex, 1, NULL);
         ReleaseSemaphore(full,  1, NULL);
-        Sleep(SLEEPTIME);
     }
 }
 
@@ -63,10 +65,10 @@ DWORD __stdcall consumer(void*) {
 
         consume_item();
         updateBufferList();
+        Sleep(SLEEPTIME);
 
         ReleaseSemaphore(mutex, 1, NULL);
         ReleaseSemaphore(empty, 1, NULL);
-        Sleep(SLEEPTIME);
     }
 }
 
@@ -88,14 +90,16 @@ int main(int argc, char* argv[]) {
     empty = CreateSemaphore(NULL, CHUNKSIZE, CHUNKSIZE, NULL);
     full  = CreateSemaphore(NULL, 0,         CHUNKSIZE, NULL);
 
-    HANDLE threads[3];
+    auto hGui = CreateThread(NULL, 1024, gui,      NULL, 0, NULL);
 
-    threads[0] = CreateThread(NULL, 1024, gui,      NULL, 0, NULL);
-    threads[1] = CreateThread(NULL, 1024, producer, NULL, 0, NULL);
-    threads[2] = CreateThread(NULL, 1024, consumer, NULL, 0, NULL);
+    std::vector<HANDLE> threads;
+    for (size_t i = 0; i < 2; i++) {
+        threads.push_back(CreateThread(NULL, 1024, producer, NULL, 0, NULL));
+    }
+    threads.push_back(CreateThread(NULL, 1024, consumer, NULL, 0, NULL));
 
-    // WaitForMultipleObjects(3, threads, true, INFINITE);
-    WaitForSingleObject(threads[0], INFINITE);
-    TerminateThread(threads[1], 0);
-    TerminateThread(threads[2], 0);
+    WaitForSingleObject(hGui, INFINITE);
+    for (auto i : threads) {
+        TerminateThread(i, 0);
+    }
 }

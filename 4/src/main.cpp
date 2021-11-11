@@ -30,17 +30,6 @@ void updateBufferList() {
     }
 }
 
-void produce_item() {
-    int number = QRandomGenerator::global()->generate();
-    qDebug() << "produced: " << number;
-    buffer.push_back(number);
-}
-
-void consume_item() {
-    qDebug() << "consumed: " << buffer.back();
-    buffer.pop_front();
-}
-
 void wait() {
     Sleep(1000 / w->tickrate);
 }
@@ -50,7 +39,7 @@ DWORD __stdcall producer(void*) {
         WaitForSingleObject(empty, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
 
-        produce_item();
+        buffer.push_back(QRandomGenerator::global()->generate());
         updateBufferList();
         wait();
 
@@ -64,7 +53,7 @@ DWORD __stdcall consumer(void*) {
         WaitForSingleObject(full, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
 
-        consume_item();
+        buffer.pop_front();
         updateBufferList();
         wait();
 

@@ -1,8 +1,12 @@
-#include <QCoreApplication>
+#include <QApplication>
 #include <QDebug>
+
 #include <windows.h>
+
 #include <list>
 #include <vector>
+
+#include "MainWindow.h" 
 
 #define CHUNKSIZE 4
 #define ITERS 20
@@ -68,6 +72,10 @@ DWORD __stdcall consumer(void*) {
 }
 
 int main(int argc, char* argv[]) {
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.show();
+
     mutex = CreateSemaphore(NULL, 1, 1, NULL);
     empty = CreateSemaphore(NULL, CHUNKSIZE, CHUNKSIZE, NULL);
     full  = CreateSemaphore(NULL, 0, CHUNKSIZE, NULL);
@@ -78,4 +86,6 @@ int main(int argc, char* argv[]) {
     threads[1] = CreateThread(NULL, 1024, consumer, NULL, 0, NULL);
 
     WaitForMultipleObjects(2, threads, true, INFINITE);
+
+    return a.exec();
 }

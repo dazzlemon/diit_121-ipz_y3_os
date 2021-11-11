@@ -331,6 +331,7 @@ Makefile: kpz4.pro ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/win32-g+
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/resources.prf \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/moc.prf \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/win32/opengl.prf \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/uic.prf \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/qmake_use.prf \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/file_copies.prf \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/win32/windows.prf \
@@ -339,6 +340,7 @@ Makefile: kpz4.pro ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/win32-g+
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/yacc.prf \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/lex.prf \
 		kpz4.pro \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/plugins/styles/qwindowsvistastyle.prl \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/plugins/platforms/qwindows.prl \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/plugins/imageformats/qgif.prl \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/plugins/imageformats/qicns.prl \
@@ -350,6 +352,7 @@ Makefile: kpz4.pro ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/win32-g+
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/plugins/imageformats/qtiff.prl \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/plugins/imageformats/qwbmp.prl \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/plugins/imageformats/qwebp.prl \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/lib/Qt5Widgets.prl \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/lib/Qt5Gui.prl \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/lib/Qt5Core.prl \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/lib/qtmain.prl \
@@ -616,6 +619,7 @@ Makefile: kpz4.pro ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/win32-g+
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/resources.prf:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/moc.prf:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/win32/opengl.prf:
+../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/uic.prf:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/qmake_use.prf:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/file_copies.prf:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/win32/windows.prf:
@@ -624,6 +628,7 @@ Makefile: kpz4.pro ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/win32-g+
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/yacc.prf:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/lex.prf:
 kpz4.pro:
+../../../mxe/usr/i686-w64-mingw32.static/qt5/plugins/styles/qwindowsvistastyle.prl:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/plugins/platforms/qwindows.prl:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/plugins/imageformats/qgif.prl:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/plugins/imageformats/qicns.prl:
@@ -635,6 +640,7 @@ kpz4.pro:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/plugins/imageformats/qtiff.prl:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/plugins/imageformats/qwbmp.prl:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/plugins/imageformats/qwebp.prl:
+../../../mxe/usr/i686-w64-mingw32.static/qt5/lib/Qt5Widgets.prl:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/lib/Qt5Gui.prl:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/lib/Qt5Core.prl:
 ../../../mxe/usr/i686-w64-mingw32.static/qt5/lib/qtmain.prl:

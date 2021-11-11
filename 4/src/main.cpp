@@ -11,7 +11,7 @@
 #include "MainWindow.h" 
 
 #define CHUNKSIZE 30
-#define SLEEPTIME 100
+#define SLEEPTIME 500
 
 HANDLE mutex;
 HANDLE empty;
@@ -43,7 +43,6 @@ void consume_item() {
 }
 
 DWORD __stdcall producer(void*) {
-    size_t chunk_i = 1;
     while (true) {
         WaitForSingleObject(empty, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
@@ -52,19 +51,12 @@ DWORD __stdcall producer(void*) {
         updateBufferList();
 
         ReleaseSemaphore(mutex, 1, NULL);
-
-        if (chunk_i >= CHUNKSIZE) {
-            chunk_i = 1;
-            ReleaseSemaphore(full, CHUNKSIZE, NULL);
-        } else {
-            chunk_i++;
-        }
+        ReleaseSemaphore(full,  1, NULL);
         Sleep(SLEEPTIME);
     }
 }
 
 DWORD __stdcall consumer(void*) {
-    size_t chunk_i = 1;
     while (true) {
         WaitForSingleObject(full, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
@@ -73,13 +65,7 @@ DWORD __stdcall consumer(void*) {
         updateBufferList();
 
         ReleaseSemaphore(mutex, 1, NULL);
-
-        if (chunk_i >= CHUNKSIZE) {
-            chunk_i = 1;
-            ReleaseSemaphore(empty, CHUNKSIZE, NULL);
-        } else {
-            chunk_i++;
-        }
+        ReleaseSemaphore(empty, 1, NULL);
         Sleep(SLEEPTIME);
     }
 }
@@ -108,5 +94,8 @@ int main(int argc, char* argv[]) {
     threads[1] = CreateThread(NULL, 1024, producer, NULL, 0, NULL);
     threads[2] = CreateThread(NULL, 1024, consumer, NULL, 0, NULL);
 
-    WaitForMultipleObjects(3, threads, true, INFINITE);
+    // WaitForMultipleObjects(3, threads, true, INFINITE);
+    WaitForSingleObject(threads[0], INFINITE);
+    TerminateThread(threads[1], 0);
+    TerminateThread(threads[2], 0);
 }

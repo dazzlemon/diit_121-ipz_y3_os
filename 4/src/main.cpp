@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QDebug>
 #include <QListWidget>
+#include <QRandomGenerator>
 
 #include <windows.h>
 
@@ -9,15 +10,14 @@
 
 #include "MainWindow.h" 
 
-#define CHUNKSIZE 4
-#define ITERS 20
-#define SLEEPTIME 500
+#define CHUNKSIZE 30
+#define ITERS 1000
+#define SLEEPTIME 100
 
 HANDLE mutex;
 HANDLE empty;
 HANDLE full;
 
-int counter = 0;
 std::vector<int> buffer;
 
 QApplication* a;
@@ -33,7 +33,7 @@ void updateBufferList() {
 }
 
 void produce_item() {
-    int number = ++counter;
+    int number = QRandomGenerator::global()->generate();
     qDebug() << "produced: " << number;
     buffer.push_back(number);
 }

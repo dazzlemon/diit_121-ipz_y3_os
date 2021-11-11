@@ -6,25 +6,25 @@
 #include <windows.h>
 
 #include <list>
-#include <vector>
+#include <deque>
 
 #include "MainWindow.h" 
 
 #define CHUNKSIZE 30
-#define SLEEPTIME 500
+#define SLEEPTIME 50
 
 HANDLE mutex;
 HANDLE empty;
 HANDLE full;
 
-std::vector<int> buffer;
+std::deque<int> buffer;
 
 QApplication* a;
 MainWindow* w;
 
 void updateBufferList() {
     QListWidget* bufferListWidget = w->findChild<QWidget*>("centralwidget")
-                                    ->findChild<QListWidget*>("bufferListWidget");
+                                     ->findChild<QListWidget*>("bufferListWidget");
     bufferListWidget->clear();
     for (auto i : buffer) {
         bufferListWidget->addItem(QString::number(i));
@@ -39,7 +39,7 @@ void produce_item() {
 
 void consume_item() {
     qDebug() << "consumed: " << buffer.back();
-    buffer.pop_back();
+    buffer.pop_front();
 }
 
 DWORD __stdcall producer(void*) {
@@ -82,15 +82,15 @@ DWORD __stdcall gui(void*) {
 int main(int argc, char* argv[]) {
     argc_ = argc; argv_ = argv;
     a = new QApplication(argc_, argv_);
-    w = new MainWindow();
+    w = new MainWindow();// it wouldn't show otherwise idk why
 
-    mutex = CreateSemaphore(NULL, 1, 1, NULL);
+    mutex = CreateSemaphore(NULL, 1,         1,         NULL);
     empty = CreateSemaphore(NULL, CHUNKSIZE, CHUNKSIZE, NULL);
-    full  = CreateSemaphore(NULL, 0, CHUNKSIZE, NULL);
+    full  = CreateSemaphore(NULL, 0,         CHUNKSIZE, NULL);
 
     HANDLE threads[3];
 
-    threads[0] = CreateThread(NULL, 1024, gui, NULL, 0, NULL);
+    threads[0] = CreateThread(NULL, 1024, gui,      NULL, 0, NULL);
     threads[1] = CreateThread(NULL, 1024, producer, NULL, 0, NULL);
     threads[2] = CreateThread(NULL, 1024, consumer, NULL, 0, NULL);
 

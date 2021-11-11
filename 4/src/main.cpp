@@ -6,6 +6,7 @@
 
 #define CHUNKSIZE 4
 #define ITERS 20
+#define SLEEPTIME 50
 
 HANDLE mutex;
 HANDLE empty;
@@ -25,7 +26,6 @@ void consume_item() {
     buffer.pop_back();
 }
 
-
 DWORD __stdcall producer(void*) {
     for (size_t i = 0, chunk_i = 1; i < ITERS; i++) {
         WaitForSingleObject(empty, INFINITE);
@@ -41,7 +41,7 @@ DWORD __stdcall producer(void*) {
         } else {
             chunk_i++;
         }
-        Sleep(500);
+        Sleep(SLEEPTIME);
     }
     return 0;
 }
@@ -62,13 +62,12 @@ DWORD __stdcall consumer(void*) {
         else {
             chunk_i++;
         }
-        Sleep(500);
+        Sleep(SLEEPTIME);
     }
     return 0;
 }
 
 int main(int argc, char* argv[]) {
-    QCoreApplication a(argc, argv);
     mutex = CreateSemaphore(NULL, 1, 1, NULL);
     empty = CreateSemaphore(NULL, CHUNKSIZE, CHUNKSIZE, NULL);
     full  = CreateSemaphore(NULL, 0, CHUNKSIZE, NULL);
@@ -79,5 +78,4 @@ int main(int argc, char* argv[]) {
     threads[1] = CreateThread(NULL, 1024, consumer, NULL, 0, NULL);
 
     WaitForMultipleObjects(2, threads, true, INFINITE);
-    return a.exec();
 }

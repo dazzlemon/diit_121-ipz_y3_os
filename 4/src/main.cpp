@@ -99,11 +99,11 @@ DWORD __stdcall gui(void*) {
     return a->exec();
 }
 
-std::string cli(std::string execname, std::string filename, std::string process_type) {
-    return process_type
+char* cli(std::string execname, std::string filename, std::string process_type) {
+    return strdup((process_type
         + " " + MUTEXNAME
         + " " + EMPTYNAME
-        + " " + FULLNAME;
+        + " " + FULLNAME).c_str());
 }
 
 void doWithMap(char* filename, std::function<void(void*)> f) {
@@ -141,6 +141,24 @@ void doWithMap(char* filename, std::function<void(void*)> f) {
     CloseHandle(file);
 }
 
+PROCESS_INFORMATION CreateProcess_(char* cl) {
+    auto si = STARTUPINFO();
+    PROCESS_INFORMATION pi;
+    CreateProcess(
+        /*lpApplicationName   */ NULL,
+        /*lpCommandLine       */ strdup(cl),
+        /*lpProcessAttributes */ NULL,
+        /*lpThreadAttributes  */ NULL,
+        /*bInheritHandles     */ false,
+        /*dwCreationFlags     */ NULL,
+        /*lpEnvironment       */ NULL,
+        /*lpCurrentDirectory  */ NULL,
+        /*lpStartupInfo       */ &si,
+        /*lpProcessInformation*/ &pi
+    );
+    return pi;
+}
+
 int main(int argc, char* argv[]) {
     /**
      * argv[1] - filename
@@ -167,15 +185,15 @@ int main(int argc, char* argv[]) {
 
         auto hGui = CreateThread(NULL, 1024, gui,      NULL, 0, NULL);
 
-        std::vector<HANDLE> threads;
+        std::vector<PROCESS_INFORMATION> processes;
         for (size_t i = 0; i < 2; i++) {
-            threads.push_back(CreateThread(NULL, 1024, producer, NULL, 0, NULL));
+            processes.push_back(CreateProcess_(cl_producer));
         }
-        threads.push_back(CreateThread(NULL, 1024, consumer, NULL, 0, NULL));
+        processes.push_back(CreateProcess_(cl_consumer));
 
         WaitForSingleObject(hGui, INFINITE);
-        for (auto i : threads) {
-            TerminateThread(i, 0);
+        for (auto i : processes) {
+            TerminateProcess(i.hProcess, 0);
         }
     } else if (argc == 5) {// consumer or producer
         auto process_type = argv[1];

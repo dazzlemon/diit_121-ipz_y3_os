@@ -57,7 +57,7 @@ void doWithMap(char* filename, std::function<void(void*)> f) {
     CloseHandle(file);
 }
 
-QList<int> deque_bytes(char* rawdata) {
+QList<int> deque_bytes(char rawdata[CHUNKSIZE * sizeof(int)]) {
     QList<int> d;
     auto bytes = QByteArray::fromRawData(rawdata, CHUNKSIZE * sizeof(int));
     QDataStream stream(&bytes, QIODevice::ReadOnly);
@@ -68,7 +68,7 @@ QList<int> deque_bytes(char* rawdata) {
 QList<int> deque_file(char* filename) {
     QList<int> d;
     doWithMap(filename, [&](void* buf) {
-        char* rawdata;
+        char* rawdata = new char[CHUNKSIZE * sizeof(int)];
         CopyMemory(rawdata, buf, CHUNKSIZE * sizeof(int));
         d = deque_bytes(rawdata);
     });
@@ -79,7 +79,12 @@ char* bytes_deque(QList<int> d) {
     QByteArray bytes;
     QDataStream stream(&bytes, QIODevice::WriteOnly);
     stream << d;
-    return strdup(bytes.constData());
+    
+    char* res = new char[CHUNKSIZE * sizeof(int)]{'\0'};
+    memcpy(res, bytes.constData(), bytes.length() > 30 ? 30 
+                                                       : bytes.length());
+
+    return res;
 }
 
 void updateBufferList(char* filename) {
@@ -101,12 +106,19 @@ void producer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
         WaitForSingleObject(empty, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
 
+        qDebug() << "producer1";
         doWithMap(filename, [](void* buf) {
+            qDebug() << "producer2";
             auto d = deque_bytes(reinterpret_cast<char*>(buf));
+            qDebug() << "producer3";
             d.push_back(QRandomGenerator::global()->generate());
+            qDebug() << "producer4";
             auto b = bytes_deque(d);
-            CopyMemory(buf, b, CHUNKSIZE);
+            qDebug() << "producer5";
+            CopyMemory(buf, b, CHUNKSIZE * sizeof(int));
+            qDebug() << "producer6";
         });
+
         updateBufferList(filename);
         wait();
 
@@ -120,11 +132,17 @@ void consumer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
         WaitForSingleObject(full, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
 
+        qDebug() << "consumer1";
         doWithMap(filename, [](void* buf) {
+            qDebug() << "consumer2";
             auto d = deque_bytes(reinterpret_cast<char*>(buf));
+            qDebug() << "consumer3";
             d.pop_front();
+            qDebug() << "consumer4";
             auto b = bytes_deque(d);
+            qDebug() << "consumer5";
             CopyMemory(buf, b, CHUNKSIZE);
+            qDebug() << "consumer6";
         });
         updateBufferList(filename);
         wait();
@@ -196,6 +214,11 @@ int main(int argc, char* argv[]) {
 
         auto hGui = CreateThread(NULL, 1024, gui,      NULL, 0, NULL);
 
+        doWithMap(filename, [](void* buf) {// init file with zeroes
+            char zeroes[CHUNKSIZE * sizeof(int)] = {'\0'};
+            CopyMemory(buf, zeroes, CHUNKSIZE * sizeof(int));
+        });
+
         std::vector<PROCESS_INFORMATION> processes;
         for (size_t i = 0; i < 2; i++) {
             processes.push_back(CreateProcess_(cl_producer));
@@ -216,10 +239,12 @@ int main(int argc, char* argv[]) {
         auto mutex = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, mutex_name);
         auto empty = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, empty_name);
         auto full  = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, full_name);
-
+        qDebug() << "main1";
         if (std::string(process_type) == "consumer") {
+            qDebug() << "main2";
             consumer(filename, mutex, empty, full);
         } else if (std::string(process_type) == "producer") {
+            qDebug() << "main3";
             producer(filename, mutex, empty, full);
         } else {
             qDebug() << "wrong process type";

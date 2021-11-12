@@ -15,7 +15,7 @@ CC            = i686-w64-mingw32.static-gcc
 CXX           = i686-w64-mingw32.static-g++
 DEFINES       = -DUNICODE -D_UNICODE -DWIN32 -DMINGW_HAS_SECURE_API=1 -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_NEEDS_QMAIN
 CFLAGS        = -pipe -fno-keep-inline-dllexport -O2 -Wall -Wextra -Wextra -ffunction-sections -fdata-sections $(DEFINES)
-CXXFLAGS      = -pipe -fno-keep-inline-dllexport -O2 -std=gnu++11 -Wall -Wextra -Wextra -ffunction-sections -fdata-sections -fexceptions -mthreads $(DEFINES)
+CXXFLAGS      = -pipe -fno-keep-inline-dllexport -w -O2 -std=gnu++11 -Wall -Wextra -Wextra -ffunction-sections -fdata-sections -fexceptions -mthreads $(DEFINES)
 INCPATH       = -I. -I../../../mxe/usr/i686-w64-mingw32.static/include -I../../../mxe/usr/i686-w64-mingw32.static/qt5/include -I../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets -I../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtGui -I../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore -Irelease -I. -I../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/win32-g++ 
 LINKER      =        i686-w64-mingw32.static-g++
 LFLAGS        =        -Wl,-s -Wl,--gc-sections -Wl,-subsystem,windows -mthreads
@@ -105,7 +105,7 @@ compiler_moc_predefs_make_all: release/moc_predefs.h
 compiler_moc_predefs_clean:
 	-$(DEL_FILE) release/moc_predefs.h
 release/moc_predefs.h: ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/data/dummy.cpp
-	i686-w64-mingw32.static-g++ -pipe -fno-keep-inline-dllexport -O2 -std=gnu++11 -Wall -Wextra -Wextra -ffunction-sections -fdata-sections -dM -E -o release/moc_predefs.h ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/data/dummy.cpp
+	i686-w64-mingw32.static-g++ -pipe -fno-keep-inline-dllexport -w -O2 -std=gnu++11 -Wall -Wextra -Wextra -ffunction-sections -fdata-sections -dM -E -o release/moc_predefs.h ../../../mxe/usr/i686-w64-mingw32.static/qt5/mkspecs/features/data/dummy.cpp
 
 compiler_moc_header_make_all: release/moc_MainWindow.cpp
 compiler_moc_header_clean:
@@ -412,6 +412,28 @@ release/main.o: src/main.cpp ../../../mxe/usr/i686-w64-mingw32.static/qt5/includ
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtGui/qguiapplication.h \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtGui/qinputmethod.h \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/QDebug \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/QListWidget \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qlistwidget.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qlistview.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qabstractitemview.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qabstractscrollarea.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qframe.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/qabstractitemmodel.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/qitemselectionmodel.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qabstractitemdelegate.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qstyleoption.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qabstractspinbox.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtGui/qvalidator.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/qregularexpression.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtGui/qicon.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qslider.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qabstractslider.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qstyle.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qtabbar.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qtabwidget.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qrubberband.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/QRandomGenerator \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/qrandom.h \
 		../../../mxe/usr/i686-w64-mingw32.static/include/windows.h \
 		../../../mxe/usr/i686-w64-mingw32.static/include/sdkddkver.h \
 		../../../mxe/usr/i686-w64-mingw32.static/include/winresrc.h \
@@ -550,9 +572,7 @@ release/main.o: src/main.cpp ../../../mxe/usr/i686-w64-mingw32.static/qt5/includ
 		../../../mxe/usr/i686-w64-mingw32.static/include/imm.h \
 		src/MainWindow.h \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/QMainWindow \
-		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qmainwindow.h \
-		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qtabwidget.h \
-		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtGui/qicon.h
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qmainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release/main.o src/main.cpp
 
 release/MainWindow.o: src/MainWindow.cpp src/MainWindow.h \
@@ -691,7 +711,43 @@ release/MainWindow.o: src/MainWindow.cpp src/MainWindow.h \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtGui/qtouchdevice.h \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qtabwidget.h \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtGui/qicon.h \
-		ui_MainWindow.h
+		ui_MainWindow.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/QVariant \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/QApplication \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qapplication.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/qcoreapplication.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/qeventloop.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qdesktopwidget.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtGui/qguiapplication.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtGui/qinputmethod.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/QHBoxLayout \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qboxlayout.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qlayout.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qlayoutitem.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qgridlayout.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/QLabel \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qlabel.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qframe.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/QListWidget \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qlistwidget.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qlistview.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qabstractitemview.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qabstractscrollarea.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/qabstractitemmodel.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/qitemselectionmodel.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qabstractitemdelegate.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qstyleoption.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qabstractspinbox.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtGui/qvalidator.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/qregularexpression.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qslider.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qabstractslider.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qstyle.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qtabbar.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qrubberband.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/QSlider \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/QVBoxLayout \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/QWidget
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release/MainWindow.o src/MainWindow.cpp
 
 release/main_plugin_import.o: /home/dazzlemon/github/diit_121-ipz_y3_os/4/main_plugin_import.cpp 

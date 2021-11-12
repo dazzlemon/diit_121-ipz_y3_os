@@ -48,6 +48,41 @@ void wait() {
     Sleep(1000 / w->tickrate);
 }
 
+void doWithMap(char* filename, std::function<void(void*)> f) {
+    auto file = CreateFileA(
+        filename,
+        GENERIC_READ | GENERIC_WRITE,
+        0,
+        NULL,
+        CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL,
+        NULL
+    );
+
+    auto mapFile = CreateFileMappingA(
+        file,
+        NULL,                   // default security
+        PAGE_READWRITE,         // read/write access
+        0,                      // maximum object size (high-order DWORD)
+        CHUNKSIZE * sizeof(int),// maximum object size (low-order DWORD)
+        MAPNAME                 // name of mapping object
+    );
+
+    auto buf = MapViewOfFile(
+        mapFile,
+        FILE_MAP_ALL_ACCESS,
+        0,
+        0,
+        CHUNKSIZE * sizeof(int)
+    );
+
+    f(buf);
+
+    UnmapViewOfFile(buf);
+    CloseHandle(mapFile);
+    CloseHandle(file);
+}
+
 void producer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
     while (true) {
         WaitForSingleObject(empty, INFINITE);
@@ -96,51 +131,18 @@ DWORD __stdcall gui(void*) {
 }
 
 char* cli(std::string execname, std::string filename, std::string process_type) {
-    return strdup((process_type
+    return strdup((execname
+        + " " + filename
+        + " " + process_type
         + " " + MUTEXNAME
         + " " + EMPTYNAME
         + " " + FULLNAME).c_str());
 }
 
-void doWithMap(char* filename, std::function<void(void*)> f) {
-    auto file = CreateFile(
-        filename,
-        GENERIC_READ | GENERIC_WRITE,
-        0,
-        NULL,
-        CREATE_ALWAYS,
-        FILE_ATTRIBUTE_NORMAL,
-        NULL
-    );
-
-    auto mapFile = CreateFileMapping(
-        file,
-        NULL,                   // default security
-        PAGE_READWRITE,         // read/write access
-        0,                      // maximum object size (high-order DWORD)
-        CHUNKSIZE * sizeof(int),// maximum object size (low-order DWORD)
-        MAPNAME                 // name of mapping object
-    );
-
-    auto buf = MapViewOfFile(
-        mapFile,
-        FILE_MAP_ALL_ACCESS,
-        0,
-        0,
-        CHUNKSIZE * sizeof(int)
-    );
-
-    f(buf);
-
-    UnmapViewOfFile(buf);
-    CloseHandle(mapFile);
-    CloseHandle(file);
-}
-
 PROCESS_INFORMATION CreateProcess_(char* cl) {
-    auto si = STARTUPINFO();
+    auto si = STARTUPINFOA();
     PROCESS_INFORMATION pi;
-    CreateProcess(
+    CreateProcessA(
         /*lpApplicationName   */ NULL,
         /*lpCommandLine       */ strdup(cl),
         /*lpProcessAttributes */ NULL,
@@ -175,9 +177,9 @@ int main(int argc, char* argv[]) {
         auto cl_consumer = cli(argv[0], filename, CONSUMER);
         auto cl_producer = cli(argv[0], filename, PRODUCER);
 
-        auto mutex = CreateSemaphore(NULL, 1,         1,         MUTEXNAME);
-        auto empty = CreateSemaphore(NULL, CHUNKSIZE, CHUNKSIZE, EMPTYNAME);
-        auto full  = CreateSemaphore(NULL, 0,         CHUNKSIZE, FULLNAME);
+        auto mutex = CreateSemaphoreA(NULL, 1,         1,         MUTEXNAME);
+        auto empty = CreateSemaphoreA(NULL, CHUNKSIZE, CHUNKSIZE, EMPTYNAME);
+        auto full  = CreateSemaphoreA(NULL, 0,         CHUNKSIZE, FULLNAME);
 
         auto hGui = CreateThread(NULL, 1024, gui,      NULL, 0, NULL);
 
@@ -198,9 +200,9 @@ int main(int argc, char* argv[]) {
         auto empty_name   = argv[4];
         auto full_name    = argv[5];
 
-        auto mutex = OpenSemaphore(SEMAPHORE_ALL_ACCESS, false, mutex_name);
-        auto empty = OpenSemaphore(SEMAPHORE_ALL_ACCESS, false, empty_name);
-        auto full  = OpenSemaphore(SEMAPHORE_ALL_ACCESS, false, full_name);
+        auto mutex = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, mutex_name);
+        auto empty = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, empty_name);
+        auto full  = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, full_name);
 
         if (std::string(process_type) == "consumer") {
             consumer(filename, mutex, empty, full);

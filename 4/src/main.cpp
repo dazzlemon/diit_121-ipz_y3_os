@@ -2,10 +2,10 @@
 #include <QDebug>
 #include <QListWidget>
 #include <QRandomGenerator>
+#include <QList>
 
 #include <windows.h>
 
-#include <deque>
 #include <functional>
 
 #include "MainWindow.h" 
@@ -21,32 +21,6 @@
 
 QApplication* a;
 MainWindow* w;
-
-std::deque<int> deque_file(char* filename) {
-
-}
-
-std::deque<int> deque_bytes(char* bytes) {
-
-}
-
-char* bytes_deque(std::deque<int> d) {
-
-}
-
-void updateBufferList(char* filename) {
-    QListWidget* bufferListWidget = w->findChild<QWidget*>("centralwidget")
-                                     ->findChild<QListWidget*>("bufferListWidget");
-    bufferListWidget->clear();
-    auto buffer = deque_file(filename);
-    for (auto i : buffer) {
-        bufferListWidget->addItem(QString::number(i));
-    }
-}
-
-void wait() {
-    Sleep(1000 / w->tickrate);
-}
 
 void doWithMap(char* filename, std::function<void(void*)> f) {
     auto file = CreateFileA(
@@ -81,6 +55,45 @@ void doWithMap(char* filename, std::function<void(void*)> f) {
     UnmapViewOfFile(buf);
     CloseHandle(mapFile);
     CloseHandle(file);
+}
+
+QList<int> deque_bytes(char* rawdata) {
+    QList<int> d;
+    auto bytes = QByteArray::fromRawData(rawdata, CHUNKSIZE * sizeof(int));
+    QDataStream stream(&bytes, QIODevice::ReadOnly);
+    stream >> d;
+    return d;
+}
+
+QList<int> deque_file(char* filename) {
+    QList<int> d;
+    doWithMap(filename, [&](void* buf) {
+        char* rawdata;
+        CopyMemory(rawdata, buf, CHUNKSIZE * sizeof(int));
+        d = deque_bytes(rawdata);
+    });
+    return d;
+}
+
+char* bytes_deque(QList<int> d) {
+    QByteArray bytes;
+    QDataStream stream(&bytes, QIODevice::WriteOnly);
+    stream << d;
+    return strdup(bytes.constData());
+}
+
+void updateBufferList(char* filename) {
+    QListWidget* bufferListWidget = w->findChild<QWidget*>("centralwidget")
+                                     ->findChild<QListWidget*>("bufferListWidget");
+    bufferListWidget->clear();
+    auto buffer = deque_file(filename);
+    for (auto i : buffer) {
+        bufferListWidget->addItem(QString::number(i));
+    }
+}
+
+void wait() {
+    Sleep(1000 / w->tickrate);
 }
 
 void producer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
@@ -167,7 +180,7 @@ int main(int argc, char* argv[]) {
      * 
      * if no arguments 2-5 provided then process type infered as gui
      */
-    if (argc == 1) {// gui
+    if (argc == 2) {// gui
         argc_ = argc; argv_ = argv;
         a = new QApplication(argc_, argv_);
         w = new MainWindow();// it wouldn't show otherwise idk why

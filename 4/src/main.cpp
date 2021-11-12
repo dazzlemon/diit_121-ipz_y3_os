@@ -19,10 +19,6 @@
 #define PRODUCER  "producer"
 #define MAPNAME   "map"
 
-HANDLE mutex;
-HANDLE empty;
-HANDLE full;
-
 QApplication* a;
 MainWindow* w;
 
@@ -52,7 +48,7 @@ void wait() {
     Sleep(1000 / w->tickrate);
 }
 
-void producer(char* filename) {
+void producer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
     while (true) {
         WaitForSingleObject(empty, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
@@ -71,7 +67,7 @@ void producer(char* filename) {
     }
 }
 
-void consumer(char* filename) {
+void consumer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
     while (true) {
         WaitForSingleObject(full, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
@@ -179,9 +175,9 @@ int main(int argc, char* argv[]) {
         auto cl_consumer = cli(argv[0], filename, CONSUMER);
         auto cl_producer = cli(argv[0], filename, PRODUCER);
 
-        mutex = CreateSemaphore(NULL, 1,         1,         MUTEXNAME);
-        empty = CreateSemaphore(NULL, CHUNKSIZE, CHUNKSIZE, EMPTYNAME);
-        full  = CreateSemaphore(NULL, 0,         CHUNKSIZE, FULLNAME);
+        auto mutex = CreateSemaphore(NULL, 1,         1,         MUTEXNAME);
+        auto empty = CreateSemaphore(NULL, CHUNKSIZE, CHUNKSIZE, EMPTYNAME);
+        auto full  = CreateSemaphore(NULL, 0,         CHUNKSIZE, FULLNAME);
 
         auto hGui = CreateThread(NULL, 1024, gui,      NULL, 0, NULL);
 
@@ -195,20 +191,21 @@ int main(int argc, char* argv[]) {
         for (auto i : processes) {
             TerminateProcess(i.hProcess, 0);
         }
-    } else if (argc == 5) {// consumer or producer
-        auto process_type = argv[1];
-        auto mutex_name   = argv[2];
-        auto empty_name   = argv[3];
-        auto full_name    = argv[4];
+    } else if (argc == 6) {// consumer or producer
+        auto filename     = argv[1];
+        auto process_type = argv[2];
+        auto mutex_name   = argv[3];
+        auto empty_name   = argv[4];
+        auto full_name    = argv[5];
 
         auto mutex = OpenSemaphore(SEMAPHORE_ALL_ACCESS, false, mutex_name);
         auto empty = OpenSemaphore(SEMAPHORE_ALL_ACCESS, false, empty_name);
         auto full  = OpenSemaphore(SEMAPHORE_ALL_ACCESS, false, full_name);
 
         if (std::string(process_type) == "consumer") {
-
+            consumer(filename, mutex, empty, full);
         } else if (std::string(process_type) == "producer") {
-
+            producer(filename, mutex, empty, full);
         } else {
             qDebug() << "wrong process type";
         }

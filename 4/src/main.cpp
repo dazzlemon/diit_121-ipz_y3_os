@@ -23,7 +23,6 @@
 #define MAPNAME   "map"
 #define UPDATE_BUFFER_GUI_SIGNAL "ubgs"
 
-QApplication* a;
 MainWindow* w;
 char* gFilename;
 
@@ -126,10 +125,10 @@ void consumer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
 
 DWORD __stdcall gui(void* arg) {
     auto args = reinterpret_cast<std::pair<int, char**>*>(arg);
-    a = new QApplication(args->first, args->second);
+    QApplication a(args->first, args->second);
     w = new MainWindow();
     w->show();
-    return a->exec();
+    return a.exec();
 }
 
 DWORD __stdcall gui_updater(void*) {

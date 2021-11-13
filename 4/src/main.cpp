@@ -8,7 +8,8 @@
 
 #include <functional>
 
-#include "MainWindow.h" 
+#include "MainWindow.h"
+#include "marshalling.h"
 
 #define CHUNKSIZE 30
 
@@ -60,18 +61,6 @@ void doWithMap(char* filename, std::function<void(void*)> f) {
     CloseHandle(file);
 }
 
-QList<int> deque_bytes(char* rawdata, size_t size_) {
-    QList<int> d;
-    auto bytes = QByteArray::fromRawData(rawdata, size_);
-    QDataStream stream(&bytes, QIODevice::ReadOnly);
-    stream >> d;
-    return d;
-}
-
-QList<int> deque_bytes_(char* rawdata) {
-    return deque_bytes(rawdata + 1, rawdata[0]);
-}
-
 QList<int> deque_file(char* filename) {
     QList<int> d;
     doWithMap(filename, [&](void* buf) {
@@ -79,25 +68,6 @@ QList<int> deque_file(char* filename) {
         d = deque_bytes(buf_ + 1, buf_[0]);
     });
     return d;
-}
-
-std::pair<char*, size_t> bytes_deque(QList<int> d) {
-    QByteArray bytes;
-    QDataStream stream(&bytes, QIODevice::WriteOnly);
-    stream << d;
-    
-    char* res = new char[bytes.length()];
-    memcpy(res, bytes.constData(), bytes.length());
-
-    return {res, bytes.length()};
-}
-
-char* bytes_deque_(QList<int> d) {
-    auto b_sz = bytes_deque(d);
-    auto b_ = new char[b_sz.second + 1];
-    b_[0] = b_sz.second;
-    memcpy(b_ + 1, b_sz.first, b_sz.second);
-    return b_;
 }
 
 void updateBufferList(char* filename) {
@@ -176,10 +146,7 @@ DWORD __stdcall gui_updater(void*) {
 char* cli(std::string execname, std::string filename, std::string process_type) {
     return strdup((execname
         + " " + filename
-        + " " + process_type
-        + " " + MUTEXNAME
-        + " " + EMPTYNAME
-        + " " + FULLNAME).c_str());
+        + " " + process_type).c_str());
 }
 
 PROCESS_INFORMATION CreateProcess_(char* cl) {
@@ -204,11 +171,8 @@ int main(int argc, char* argv[]) {
     /**
      * argv[1] - filename
      * argv[2] - process type: "consumer" | "producer"
-     * argv[3] - mutex_semaphore name
-     * argv[4] - empty_semaphore name
-     * argv[5] = full_semaphore name
      * 
-     * if no arguments 2-5 provided then process type infered as gui
+     * if no argument 2 is provided then process type infered as gui
      */
     if (argc == 2) {// gui
         argc_ = argc; argv_ = argv;
@@ -251,16 +215,13 @@ int main(int argc, char* argv[]) {
         for (auto i : processes) {
             TerminateProcess(i.hProcess, 0);
         }
-    } else if (argc == 6) {// consumer or producer
+    } else if (argc == 3) {// consumer or producer
         auto filename     = argv[1];
         auto process_type = argv[2];
-        auto mutex_name   = argv[3];
-        auto empty_name   = argv[4];
-        auto full_name    = argv[5];
 
-        auto mutex = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, mutex_name);
-        auto empty = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, empty_name);
-        auto full  = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, full_name);
+        auto mutex = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, MUTEXNAME);
+        auto empty = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, EMPTYNAME);
+        auto full  = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, FULLNAME);
         if (std::string(process_type) == "consumer") {
             consumer(filename, mutex, empty, full);
         } else if (std::string(process_type) == "producer") {

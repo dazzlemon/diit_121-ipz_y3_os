@@ -3,7 +3,8 @@ SOURCES = \
     src/MainWindow.cpp
 
 HEADERS = \
-    src/MainWindow.h
+    src/MainWindow.h \
+    src/marshalling.h
 
 FORMS = \
     src/MainWindow.ui

@@ -434,6 +434,7 @@ debug/main.o: src/main.cpp ../../../mxe/usr/i686-w64-mingw32.static/qt5/include/
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtWidgets/qrubberband.h \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/QRandomGenerator \
 		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/qrandom.h \
+		../../../mxe/usr/i686-w64-mingw32.static/qt5/include/QtCore/QList \
 		../../../mxe/usr/i686-w64-mingw32.static/include/windows.h \
 		../../../mxe/usr/i686-w64-mingw32.static/include/sdkddkver.h \
 		../../../mxe/usr/i686-w64-mingw32.static/include/winresrc.h \

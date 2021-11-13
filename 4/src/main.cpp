@@ -41,7 +41,7 @@ void doWithMap(char* filename, std::function<void(void*)> f) {
         NULL,                   // default security
         PAGE_READWRITE,         // read/write access
         0,                      // maximum object size (high-order DWORD)
-        CHUNKSIZE * sizeof(int),// maximum object size (low-order DWORD)
+        CHUNKSIZE * sizeof(int) + 1,// maximum object size (low-order DWORD)
         MAPNAME                 // name of mapping object
     );
 
@@ -50,7 +50,7 @@ void doWithMap(char* filename, std::function<void(void*)> f) {
         FILE_MAP_ALL_ACCESS,
         0,
         0,
-        CHUNKSIZE * sizeof(int)
+        CHUNKSIZE * sizeof(int) + 1
     );
 
     f(buf);
@@ -60,9 +60,9 @@ void doWithMap(char* filename, std::function<void(void*)> f) {
     CloseHandle(file);
 }
 
-QList<int> deque_bytes(char rawdata[CHUNKSIZE * sizeof(int)]) {
+QList<int> deque_bytes(char* rawdata, size_t size_) {
     QList<int> d;
-    auto bytes = QByteArray::fromRawData(rawdata, CHUNKSIZE * sizeof(int));
+    auto bytes = QByteArray::fromRawData(rawdata, size_ * sizeof(int));
     QDataStream stream(&bytes, QIODevice::ReadOnly);
     stream >> d;
     return d;
@@ -71,23 +71,22 @@ QList<int> deque_bytes(char rawdata[CHUNKSIZE * sizeof(int)]) {
 QList<int> deque_file(char* filename) {
     QList<int> d;
     doWithMap(filename, [&](void* buf) {
-        char* rawdata = new char[CHUNKSIZE * sizeof(int)];
-        CopyMemory(rawdata, buf, CHUNKSIZE * sizeof(int));
-        d = deque_bytes(rawdata);
+        char* buf_ = reinterpret_cast<char*>(buf);
+        d = deque_bytes(buf_ + 1, buf_[0]);
     });
     return d;
 }
 
-char* bytes_deque(QList<int> d) {
+std::pair<char*, size_t> bytes_deque(QList<int> d) {
     QByteArray bytes;
     QDataStream stream(&bytes, QIODevice::WriteOnly);
     stream << d;
     
-    char* res = new char[CHUNKSIZE * sizeof(int)]{'\0'};
-    memcpy(res, bytes.constData(), bytes.length() > 30 ? 30 
-                                                       : bytes.length());
+    char* res = new char[d.size() * sizeof(int) + 1];
+    res[0] = d.size();
+    memcpy(res + 1, bytes.constData(), bytes.length());
 
-    return res;
+    return {res, d.size() * sizeof(int) + 1};
 }
 
 void updateBufferList(char* filename) {
@@ -124,14 +123,15 @@ void producer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
 
         // qDebug() << "producer1";
         doWithMap(filename, [](void* buf) {
+            char* buf_ = reinterpret_cast<char*>(buf);
             // qDebug() << "producer2";
-            auto d = deque_bytes(reinterpret_cast<char*>(buf));
+            auto d = deque_bytes(buf_ + 1, buf_[0]);
             // qDebug() << "producer3";
             d.push_back(QRandomGenerator::global()->generate());
             // qDebug() << "producer4";
-            auto b = bytes_deque(d);
+            auto b_sz = bytes_deque(d);
             // qDebug() << "producer5";
-            CopyMemory(buf, b, CHUNKSIZE * sizeof(int));
+            CopyMemory(buf, b_sz.first, b_sz.second);
             // qDebug() << "producer6";
         });
         qDebug() << "produced";
@@ -156,14 +156,15 @@ void consumer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
 
         // qDebug() << "consumer1";
         doWithMap(filename, [](void* buf) {
+            char* buf_ = reinterpret_cast<char*>(buf);
             // qDebug() << "consumer2";
-            auto d = deque_bytes(reinterpret_cast<char*>(buf));
+            auto d = deque_bytes(buf_ + 1, buf_[0]);
             // qDebug() << "consumer3";
             d.pop_front();
             // qDebug() << "consumer4";
-            auto b = bytes_deque(d);
+            auto b_sz = bytes_deque(d);
             // qDebug() << "consumer5";
-            CopyMemory(buf, b, CHUNKSIZE);
+            CopyMemory(buf, b_sz.first, CHUNKSIZE);
             // qDebug() << "consumer6";
         });
         qDebug() << "consumed";
@@ -257,8 +258,8 @@ int main(int argc, char* argv[]) {
         auto hGui = CreateThread(NULL, 1024, gui, NULL, 0, NULL);
 
         doWithMap(filename, [](void* buf) {// init file with zeroes
-            char zeroes[CHUNKSIZE * sizeof(int)] = {'\0'};
-            CopyMemory(buf, zeroes, CHUNKSIZE * sizeof(int));
+            char zeroes[CHUNKSIZE * sizeof(int) + 1] = {'\0'};
+            CopyMemory(buf, zeroes, CHUNKSIZE * sizeof(int) + 1);
         });
 
         updateBufferGuiSignal = CreateEventA(

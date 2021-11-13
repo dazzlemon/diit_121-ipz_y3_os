@@ -25,7 +25,6 @@
 
 QApplication* a;
 MainWindow* w;
-HANDLE updateBufferGuiSignal;
 char* gFilename;
 
 void doWithMap(char* filename, std::function<void(void*)> f) {
@@ -86,7 +85,7 @@ void updateBufferList(char* filename) {
 }
 
 void upd_buffer(char* filename, std::function<void(QList<int>&)> f) {
-    auto updateBufferGuiSignal_ = OpenEventA(EVENT_ALL_ACCESS, false, UPDATE_BUFFER_GUI_SIGNAL);
+    auto updateBufferGuiSignal = OpenEventA(EVENT_ALL_ACCESS, false, UPDATE_BUFFER_GUI_SIGNAL);
     doWithMap(filename, [&](void* buf) {
             char* buf_ = reinterpret_cast<char*>(buf);
             auto d = deque_bytes_(buf_);
@@ -94,7 +93,7 @@ void upd_buffer(char* filename, std::function<void(QList<int>&)> f) {
             auto b = bytes_deque_(d);
             CopyMemory(buf_, b, b[0] + 1);
     });
-    SetEvent(updateBufferGuiSignal_);
+    SetEvent(updateBufferGuiSignal);
 }
 
 void producer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
@@ -135,6 +134,7 @@ DWORD __stdcall gui(void* arg) {
 
 DWORD __stdcall gui_updater(void*) {
     auto mutex = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, MUTEXNAME);
+    auto updateBufferGuiSignal = OpenEventA(EVENT_ALL_ACCESS, false, UPDATE_BUFFER_GUI_SIGNAL);
     while (true) {
         WaitForSingleObject(updateBufferGuiSignal, INFINITE);
             WaitForSingleObject(mutex, INFINITE);
@@ -169,7 +169,7 @@ int main(int argc, char* argv[]) {
             CopyMemory(buf, zeroes, CHUNKSIZE * sizeof(int) + 1);
         });
 
-        updateBufferGuiSignal = CreateEventA(
+        auto updateBufferGuiSignal = CreateEventA(
             NULL,
             false,// bManualReset
             false,// bInitialState

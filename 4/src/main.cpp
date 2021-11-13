@@ -102,6 +102,7 @@ void updateBufferList(char* filename) {
     // qDebug() << "ubl3";
     auto buffer = deque_file(filename);
     // qDebug() << "ubl4";
+    qDebug() << "buffer = " << buffer;
     for (auto i : buffer) {
         bufferListWidget->addItem(QString::number(i));
     }
@@ -266,6 +267,8 @@ int main(int argc, char* argv[]) {
             false,// bInitialState
             UPDATE_BUFFER_GUI_SIGNAL
         );
+
+        auto guiUpdater = CreateThread(NULL, 1024, gui_updater, NULL, 0, NULL);
 
         std::vector<PROCESS_INFORMATION> processes;
         for (size_t i = 0; i < 2; i++) {

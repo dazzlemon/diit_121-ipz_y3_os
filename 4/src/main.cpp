@@ -115,6 +115,7 @@ void wait() {
 }
 
 void upd_buffer(char* filename, std::function<void(QList<int>&)> f) {
+    auto updateBufferGuiSignal_ = OpenEventA(EVENT_ALL_ACCESS, false, UPDATE_BUFFER_GUI_SIGNAL);
     doWithMap(filename, [&](void* buf) {
             char* buf_ = reinterpret_cast<char*>(buf);
             auto d = deque_bytes_(buf_);
@@ -122,10 +123,10 @@ void upd_buffer(char* filename, std::function<void(QList<int>&)> f) {
             auto b = bytes_deque_(d);
             CopyMemory(buf, b, b[0] + 1);
     });
+    SetEvent(updateBufferGuiSignal_);
 }
 
 void producer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
-    auto updateBufferGuiSignal_ = OpenEventA(EVENT_ALL_ACCESS, false, UPDATE_BUFFER_GUI_SIGNAL);
     while (true) {
         WaitForSingleObject(empty, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
@@ -137,13 +138,10 @@ void producer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
 
         ReleaseSemaphore(mutex, 1, NULL);
         ReleaseSemaphore(full,  1, NULL);
-
-        SetEvent(updateBufferGuiSignal_);
     }
 }
 
 void consumer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
-    auto updateBufferGuiSignal_ = OpenEventA(EVENT_ALL_ACCESS, false, UPDATE_BUFFER_GUI_SIGNAL);
     while (true) {
         WaitForSingleObject(full, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
@@ -153,8 +151,6 @@ void consumer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
 
         ReleaseSemaphore(mutex, 1, NULL);
         ReleaseSemaphore(empty, 1, NULL);
-
-        SetEvent(updateBufferGuiSignal_);
     }
 }
 

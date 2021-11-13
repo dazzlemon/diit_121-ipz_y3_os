@@ -62,10 +62,14 @@ void doWithMap(char* filename, std::function<void(void*)> f) {
 
 QList<int> deque_bytes(char* rawdata, size_t size_) {
     QList<int> d;
-    auto bytes = QByteArray::fromRawData(rawdata, size_ * sizeof(int));
+    auto bytes = QByteArray::fromRawData(rawdata, size_);
     QDataStream stream(&bytes, QIODevice::ReadOnly);
     stream >> d;
     return d;
+}
+
+QList<int> deque_bytes_(char* rawdata) {
+    return deque_bytes(rawdata + 1, rawdata[0]);
 }
 
 QList<int> deque_file(char* filename) {
@@ -97,92 +101,60 @@ char* bytes_deque_(QList<int> d) {
 }
 
 void updateBufferList(char* filename) {
-    qDebug() << "ubl1";
     QListWidget* bufferListWidget = w->findChild<QWidget*>("centralwidget")
                                      ->findChild<QListWidget*>("bufferListWidget");
-    qDebug() << "ubl2";
-    if (bufferListWidget == NULL) {
-        qDebug() << "bufferListWidget is NULL";
-    }
     bufferListWidget->clear();
-    qDebug() << "ubl3";
     auto buffer = deque_file(filename);
-    qDebug() << "ubl4";
-    qDebug() << "buffer = " << buffer;
     for (auto i : buffer) {
         bufferListWidget->addItem(QString::number(i));
     }
-    qDebug() << "ubl5";
 }
 
 void wait() {
-    // Sleep(1000 / w->tickrate);
-    Sleep(500);// TODO
+    Sleep(50);
+}
+
+void upd_buffer(char* filename, std::function<void(QList<int>&)> f) {
+    doWithMap(filename, [&](void* buf) {
+            char* buf_ = reinterpret_cast<char*>(buf);
+            auto d = deque_bytes_(buf_);
+            f(d);
+            auto b = bytes_deque_(d);
+            CopyMemory(buf, b, b[0] + 1);
+    });
 }
 
 void producer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
     auto updateBufferGuiSignal_ = OpenEventA(EVENT_ALL_ACCESS, false, UPDATE_BUFFER_GUI_SIGNAL);
-    qDebug() << "producer started";
     while (true) {
-        qDebug() << "producer loop";
         WaitForSingleObject(empty, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
 
-        qDebug() << "producer1";
-        doWithMap(filename, [](void* buf) {
-            char* buf_ = reinterpret_cast<char*>(buf);
-            qDebug() << "producer2";
-            auto d = deque_bytes(buf_ + 1, buf_[0]);
-            qDebug() << "producer3";
-            d.push_back(QRandomGenerator::global()->generate());
-            qDebug() << "producer4";
-            auto b = bytes_deque_(d);
-            qDebug() << "producer5";
-            CopyMemory(buf, b, b[0] + 1);
-            qDebug() << "producer6";
+        upd_buffer(filename, [](QList<int>& b) {
+            b.push_back(QRandomGenerator::global()->generate());
         });
-        qDebug() << "produced";
-        qDebug() << "producer7";
-        // updateBufferList(filename);// replace with event/signal
-        SetEvent(updateBufferGuiSignal_);
-        qDebug() << "producer8";
         wait();
 
         ReleaseSemaphore(mutex, 1, NULL);
         ReleaseSemaphore(full,  1, NULL);
+
+        SetEvent(updateBufferGuiSignal_);
     }
 }
 
 void consumer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
     auto updateBufferGuiSignal_ = OpenEventA(EVENT_ALL_ACCESS, false, UPDATE_BUFFER_GUI_SIGNAL);
-    qDebug() << "consumer started";
     while (true) {
-        qDebug() << "consumer loop";
         WaitForSingleObject(full, INFINITE);
         WaitForSingleObject(mutex, INFINITE);
 
-        qDebug() << "consumer1";
-        doWithMap(filename, [](void* buf) {
-            char* buf_ = reinterpret_cast<char*>(buf);
-            qDebug() << "consumer2";
-            auto d = deque_bytes(buf_ + 1, buf_[0]);
-            qDebug() << "consumer3";
-            qDebug() << "d.size = " << d.size();
-            qDebug() << "buf size = " << (int)buf_[0];
-            d.pop_front();
-            qDebug() << "consumer4";
-            auto b = bytes_deque_(d);
-            qDebug() << "consumer5";
-            CopyMemory(buf, b, b[0] + 1);
-            qDebug() << "consumer6";
-        });
-        qDebug() << "consumed";
-        //updateBufferList(filename);// replace with event/signal
-        SetEvent(updateBufferGuiSignal_);
+        upd_buffer(filename, [](QList<int>& b) {b.pop_front();});
         wait();
 
         ReleaseSemaphore(mutex, 1, NULL);
         ReleaseSemaphore(empty, 1, NULL);
+
+        SetEvent(updateBufferGuiSignal_);
     }
 }
 
@@ -196,19 +168,12 @@ DWORD __stdcall gui(void*) {
 }
 
 DWORD __stdcall gui_updater(void*) {
-    qDebug() << "gui upd 1";
     auto mutex = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, MUTEXNAME);
-    qDebug() << "gui upd 2";
     while (true) {
-        qDebug() << "gui upd 3";
         WaitForSingleObject(updateBufferGuiSignal, INFINITE);
-            qDebug() << "gui upd 4";
             WaitForSingleObject(mutex, INFINITE);
-                qDebug() << "gui upd 5";
                 updateBufferList(gFilename);
-                qDebug() << "gui upd 6";
             ReleaseSemaphore(mutex, 1, NULL);
-        qDebug() << "gui upd 7";
     }
 }
 
@@ -300,17 +265,12 @@ int main(int argc, char* argv[]) {
         auto mutex = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, mutex_name);
         auto empty = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, empty_name);
         auto full  = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, full_name);
-        qDebug() << "main1";
         if (std::string(process_type) == "consumer") {
-            qDebug() << "main_consumer";
             consumer(filename, mutex, empty, full);
         } else if (std::string(process_type) == "producer") {
-            qDebug() << "main_producer";
             producer(filename, mutex, empty, full);
         } else {
-            qDebug() << "wrong process type";
         }
     } else {
-        qDebug() << "wrong process type";
     }
 }

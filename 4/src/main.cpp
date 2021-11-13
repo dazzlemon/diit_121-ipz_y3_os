@@ -1,5 +1,5 @@
 #include <QApplication>
-// #include <QDebug>
+#include <QDebug>
 #include <QListWidget>
 #include <QRandomGenerator>
 #include <QList>
@@ -18,9 +18,12 @@
 #define CONSUMER  "consumer"
 #define PRODUCER  "producer"
 #define MAPNAME   "map"
+#define UPDATE_BUFFER_GUI_SIGNAL "ubgs"
 
 QApplication* a;
 MainWindow* w;
+HANDLE updateBufferGuiSignal;
+char* gFilename;
 
 void doWithMap(char* filename, std::function<void(void*)> f) {
     auto file = CreateFileA(
@@ -106,10 +109,12 @@ void updateBufferList(char* filename) {
 }
 
 void wait() {
-    Sleep(1000 / w->tickrate);
+    // Sleep(1000 / w->tickrate);
+    Sleep(500);// TODO
 }
 
 void producer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
+    auto updateBufferGuiSignal_ = OpenEventA(EVENT_ALL_ACCESS, false, UPDATE_BUFFER_GUI_SIGNAL);
     // qDebug() << "producer started";
     while (true) {
         // qDebug() << "producer loop";
@@ -128,9 +133,10 @@ void producer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
             CopyMemory(buf, b, CHUNKSIZE * sizeof(int));
             // qDebug() << "producer6";
         });
-
+        qDebug() << "produced";
         // qDebug() << "producer7";
-        updateBufferList(filename);// replace with event/signal
+        // updateBufferList(filename);// replace with event/signal
+        SetEvent(updateBufferGuiSignal_);
         // qDebug() << "producer8";
         wait();
 
@@ -140,6 +146,7 @@ void producer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
 }
 
 void consumer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
+    auto updateBufferGuiSignal_ = OpenEventA(EVENT_ALL_ACCESS, false, UPDATE_BUFFER_GUI_SIGNAL);
     // qDebug() << "consumer started";
     while (true) {
         // qDebug() << "consumer loop";
@@ -158,7 +165,9 @@ void consumer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
             CopyMemory(buf, b, CHUNKSIZE);
             // qDebug() << "consumer6";
         });
-        updateBufferList(filename);// replace with event/signal
+        qDebug() << "consumed";
+        //updateBufferList(filename);// replace with event/signal
+        SetEvent(updateBufferGuiSignal_);
         wait();
 
         ReleaseSemaphore(mutex, 1, NULL);
@@ -173,6 +182,23 @@ DWORD __stdcall gui(void*) {
     w = new MainWindow();
     w->show();
     return a->exec();
+}
+
+DWORD __stdcall gui_updater(void*) {
+    // qDebug() << "gui upd 1";
+    auto mutex = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, false, MUTEXNAME);
+    // qDebug() << "gui upd 2";
+    while (true) {
+        // qDebug() << "gui upd 3";
+        WaitForSingleObject(updateBufferGuiSignal, INFINITE);
+            // qDebug() << "gui upd 4";
+            WaitForSingleObject(mutex, INFINITE);
+                // qDebug() << "gui upd 5";
+                updateBufferList(gFilename);
+                // qDebug() << "gui upd 6";
+            ReleaseSemaphore(mutex, 1, NULL);
+        // qDebug() << "gui upd 7";
+    }
 }
 
 char* cli(std::string execname, std::string filename, std::string process_type) {
@@ -218,6 +244,7 @@ int main(int argc, char* argv[]) {
         w = new MainWindow();// it wouldn't show otherwise idk why
 
         auto filename = argv[1];
+        gFilename = filename;
 
         auto cl_consumer = cli(argv[0], filename, CONSUMER);
         auto cl_producer = cli(argv[0], filename, PRODUCER);
@@ -233,7 +260,12 @@ int main(int argc, char* argv[]) {
             CopyMemory(buf, zeroes, CHUNKSIZE * sizeof(int));
         });
 
-
+        updateBufferGuiSignal = CreateEventA(
+            NULL,
+            false,// bManualReset
+            false,// bInitialState
+            UPDATE_BUFFER_GUI_SIGNAL
+        );
 
         std::vector<PROCESS_INFORMATION> processes;
         for (size_t i = 0; i < 2; i++) {

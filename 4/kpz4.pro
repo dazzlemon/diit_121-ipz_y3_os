@@ -4,7 +4,8 @@ SOURCES = \
 
 HEADERS = \
     src/MainWindow.h \
-    src/marshalling.h
+    src/marshalling.h \
+    src/util.h
 
 FORMS = \
     src/MainWindow.ui

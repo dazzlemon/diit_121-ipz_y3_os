@@ -10,8 +10,10 @@
 
 #include "MainWindow.h"
 #include "marshalling.h"
+#include "util.h"
 
 #define CHUNKSIZE 30
+#define SLEEPTIME 50
 
 #define MUTEXNAME "mutex"
 #define EMPTYNAME "empty"
@@ -65,7 +67,7 @@ QList<int> deque_file(char* filename) {
     QList<int> d;
     doWithMap(filename, [&](void* buf) {
         char* buf_ = reinterpret_cast<char*>(buf);
-        d = deque_bytes(buf_ + 1, buf_[0]);
+        d = deque_bytes_(buf_);
     });
     return d;
 }
@@ -77,11 +79,10 @@ void updateBufferList(char* filename) {
     auto buffer = deque_file(filename);
     for (auto i : buffer) {
         bufferListWidget->addItem(QString::number(i));
+        if (i == 0) {
+            qDebug() << "alarm";
+        }
     }
-}
-
-void wait() {
-    Sleep(50);
 }
 
 void upd_buffer(char* filename, std::function<void(QList<int>&)> f) {
@@ -91,7 +92,7 @@ void upd_buffer(char* filename, std::function<void(QList<int>&)> f) {
             auto d = deque_bytes_(buf_);
             f(d);
             auto b = bytes_deque_(d);
-            CopyMemory(buf, b, b[0] + 1);
+            CopyMemory(buf_, b, b[0] + 1);
     });
     SetEvent(updateBufferGuiSignal_);
 }
@@ -104,7 +105,7 @@ void producer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
         upd_buffer(filename, [](QList<int>& b) {
             b.push_back(QRandomGenerator::global()->generate());
         });
-        wait();
+        Sleep(SLEEPTIME);
 
         ReleaseSemaphore(mutex, 1, NULL);
         ReleaseSemaphore(full,  1, NULL);
@@ -117,17 +118,16 @@ void consumer(char* filename, HANDLE mutex, HANDLE empty, HANDLE full) {
         WaitForSingleObject(mutex, INFINITE);
 
         upd_buffer(filename, [](QList<int>& b) {b.pop_front();});
-        wait();
+        Sleep(SLEEPTIME);
 
         ReleaseSemaphore(mutex, 1, NULL);
         ReleaseSemaphore(empty, 1, NULL);
     }
 }
 
-int argc_; char** argv_;
-
-DWORD __stdcall gui(void*) {
-    a = new QApplication(argc_, argv_);
+DWORD __stdcall gui(void* arg) {
+    auto args = reinterpret_cast<std::pair<int, char**>*>(arg);
+    a = new QApplication(args->first, args->second);
     w = new MainWindow();
     w->show();
     return a->exec();
@@ -143,30 +143,6 @@ DWORD __stdcall gui_updater(void*) {
     }
 }
 
-char* cli(std::string execname, std::string filename, std::string process_type) {
-    return strdup((execname
-        + " " + filename
-        + " " + process_type).c_str());
-}
-
-PROCESS_INFORMATION CreateProcess_(char* cl) {
-    auto si = STARTUPINFOA();
-    PROCESS_INFORMATION pi;
-    CreateProcessA(
-        /*lpApplicationName   */ NULL,
-        /*lpCommandLine       */ strdup(cl),
-        /*lpProcessAttributes */ NULL,
-        /*lpThreadAttributes  */ NULL,
-        /*bInheritHandles     */ false,
-        /*dwCreationFlags     */ NULL,
-        /*lpEnvironment       */ NULL,
-        /*lpCurrentDirectory  */ NULL,
-        /*lpStartupInfo       */ &si,
-        /*lpProcessInformation*/ &pi
-    );
-    return pi;
-}
-
 int main(int argc, char* argv[]) {
     /**
      * argv[1] - filename
@@ -175,10 +151,7 @@ int main(int argc, char* argv[]) {
      * if no argument 2 is provided then process type infered as gui
      */
     if (argc == 2) {// gui
-        argc_ = argc; argv_ = argv;
-        a = new QApplication(argc_, argv_);
-        w = new MainWindow();// it wouldn't show otherwise idk why
-
+        auto args = std::make_pair(argc, argv);
         auto filename = argv[1];
         gFilename = filename;
 
@@ -189,7 +162,7 @@ int main(int argc, char* argv[]) {
         auto empty = CreateSemaphoreA(NULL, CHUNKSIZE, CHUNKSIZE, EMPTYNAME);
         auto full  = CreateSemaphoreA(NULL, 0,         CHUNKSIZE, FULLNAME);
 
-        auto hGui = CreateThread(NULL, 1024, gui, NULL, 0, NULL);
+        auto hGui = CreateThread(NULL, 1024, gui, &args, 0, NULL);
 
         doWithMap(filename, [](void* buf) {// init file with zeroes
             char zeroes[CHUNKSIZE * sizeof(int) + 1] = {'\0'};

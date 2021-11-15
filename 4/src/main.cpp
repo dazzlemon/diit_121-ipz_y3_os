@@ -196,7 +196,9 @@ int main(int argc, char* argv[]) {
         } else if (std::string(process_type) == "producer") {
             producer(filename, mutex, empty, full);
         } else {
+            qDebug() << "Wrong process type";
         }
     } else {
+        qDebug() << "Wrong amount of arguments";
     }
 }

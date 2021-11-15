@@ -12,7 +12,7 @@
 #include "marshalling.h"
 #include "util.h"
 
-#define CHUNKSIZE 30
+#define BUFFERSIZE 30
 #define SLEEPTIME 50
 
 #define MUTEXNAME "mutex"
@@ -42,7 +42,7 @@ void doWithMap(char* filename, std::function<void(void*)> f) {
         NULL,                   // default security
         PAGE_READWRITE,         // read/write access
         0,                      // maximum object size (high-order DWORD)
-        CHUNKSIZE * sizeof(int) + 1,// maximum object size (low-order DWORD)
+        BUFFERSIZE * sizeof(int) + 1,// maximum object size (low-order DWORD)
         MAPNAME                 // name of mapping object
     );
 
@@ -51,7 +51,7 @@ void doWithMap(char* filename, std::function<void(void*)> f) {
         FILE_MAP_ALL_ACCESS,
         0,
         0,
-        CHUNKSIZE * sizeof(int) + 1
+        BUFFERSIZE * sizeof(int) + 1
     );
 
     f(buf);
@@ -77,9 +77,6 @@ void updateBufferList(char* filename) {
     auto buffer = deque_file(filename);
     for (auto i : buffer) {
         bufferListWidget->addItem(QString::number(i));
-        if (i == 0) {
-            qDebug() << "alarm";
-        }
     }
 }
 
@@ -158,14 +155,14 @@ int main(int argc, char* argv[]) {
         auto cl_producer = cli(argv[0], filename, PRODUCER);
 
         auto mutex = CreateSemaphoreA(NULL, 1,         1,         MUTEXNAME);
-        auto empty = CreateSemaphoreA(NULL, CHUNKSIZE, CHUNKSIZE, EMPTYNAME);
-        auto full  = CreateSemaphoreA(NULL, 0,         CHUNKSIZE, FULLNAME);
+        auto empty = CreateSemaphoreA(NULL, BUFFERSIZE, BUFFERSIZE, EMPTYNAME);
+        auto full  = CreateSemaphoreA(NULL, 0,         BUFFERSIZE, FULLNAME);
 
         auto hGui = CreateThread(NULL, 1024, gui, &args, 0, NULL);
 
         doWithMap(filename, [](void* buf) {// init file with zeroes
-            char zeroes[CHUNKSIZE * sizeof(int) + 1] = {'\0'};
-            CopyMemory(buf, zeroes, CHUNKSIZE * sizeof(int) + 1);
+            char zeroes[BUFFERSIZE * sizeof(int) + 1] = {'\0'};
+            CopyMemory(buf, zeroes, BUFFERSIZE * sizeof(int) + 1);
         });
 
         auto updateBufferGuiSignal = CreateEventA(

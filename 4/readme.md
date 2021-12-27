@@ -2,6 +2,8 @@
 ## 1. Get mxe:
 git clone https://github.com/mxe/mxe.git
 
+## 2. Install [Build dependencies](https://mxe.cc/#requirements)
+
 ## 2. Build Qt5 for Windows
 cd mxe && make qtbase
 

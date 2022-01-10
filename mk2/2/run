@@ -1,0 +1,4 @@
+if [ "$#" -eq 1 ]; 
+    then wine release/main.exe $1
+    else wine release/main.exe
+fi

@@ -8,11 +8,12 @@ git clone https://github.com/mxe/mxe.git
 cd mxe && make qtbase
 
 ## 3. Modify path
-export PATH=<mxe root>/usr/bin:$PATH
+export PATH=&ltmxe root&gt/usr/bin:$PATH
 
 ## 4. Build
 sh update_make
+
 make
 
 # How to run on linux
-sh run <test.txt or other filename>
+sh run &lt test.txt or other filename &gt

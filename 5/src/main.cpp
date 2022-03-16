@@ -6,30 +6,43 @@
 #include <stdlib.h>
 #include <string.h>
 #include <tchar.h>
+#include <string>
 
 #define MB_MODALERROR (MB_OK | MB_ICONERROR | MB_APPLMODAL)
 #define ErrorBox(msg) MessageBox(NULL, msg, L"Message", MB_MODALERROR)
 
-const wchar_t szWindowClass[] = L"OS5";
+wchar_t* otherWindowClassname;
 const wchar_t szTitle[] = L"OS5";
 HINSTANCE hInst;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
-	WNDCLASSEX wcex;
-	wcex.cbSize        = sizeof(WNDCLASSEX);
-	wcex.style         = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc   = WndProc;
-	wcex.cbClsExtra    = 0;
-	wcex.cbWndExtra    = 0;
-	wcex.hInstance     = hInstance;
-	wcex.hIcon         = LoadIcon(hInstance, IDI_APPLICATION);
-	wcex.hCursor       = LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wcex.lpszMenuName  = NULL;
-	wcex.lpszClassName = szWindowClass;
-	wcex.hIconSm       = LoadIcon(wcex.hInstance, IDI_APPLICATION);
+	// arg[0] - ClassName for this window
+	// arg[1] - ClassName for other window
+	int argc;
+	LPWSTR* argv = CommandLineToArgvW(lpCmdLine, &argc);
+	if (argc != 2) {
+		ErrorBox((L"Expected two args got: \"" + std::wstring(lpCmdLine) + L"\"").c_str());
+		return 1;
+	}
+	const wchar_t* szWindowClass = argv[0];
+	otherWindowClassname = argv[1];
+
+	WNDCLASSEX wcex {
+		.cbSize        = sizeof(WNDCLASSEX),
+		.style         = CS_HREDRAW | CS_VREDRAW,
+		.lpfnWndProc   = WndProc,
+		.cbClsExtra    = 0,
+		.cbWndExtra    = 0,
+		.hInstance     = hInstance,
+		.hIcon         = LoadIcon(hInstance, IDI_APPLICATION),
+		.hCursor       = LoadCursor(NULL, IDC_ARROW),
+		.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1),
+		.lpszMenuName  = NULL,
+		.lpszClassName = szWindowClass,
+		.hIconSm       = LoadIcon(wcex.hInstance, IDI_APPLICATION),
+	};
 	if (!RegisterClassEx(&wcex)) {
 		ErrorBox(L"Call to RegisterClassEx failed!");
 		return 1;
@@ -119,13 +132,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 				GetDlgItemText(hWnd, 3, str, 50);
 				COPYDATASTRUCT cd;
 				cd.dwData = 0;
-				cd.cbData = wcslen(str) + 1;
+				cd.cbData = 2 * wcslen(str) + 1;
 				cd.lpData = str;
-				HWND hRecieverWnd = FindWindow(NULL, szWindowClass);
+				HWND hRecieverWnd = FindWindow(NULL, otherWindowClassname);
 				if (hRecieverWnd != 0) {
 					SendMessage(hRecieverWnd, WM_COPYDATA, 0, (LPARAM)&cd);
 				} else {
-					ErrorBox(L"Окно приемника не создано");
+					ErrorBox((L"Can't find receiver window with classname \"" + std::wstring(otherWindowClassname) + L"\"").c_str());
 				}
 			}
 			break;

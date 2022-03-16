@@ -60,7 +60,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	);
 	HWND hWnd_edit1 = CreateWindow(
 		L"Edit",
-		L"Введите текст",
+		L"Enter text",
 		WS_CHILD | WS_VISIBLE | WS_BORDER,
 		5, 5, 100, 30,
 		hWnd,
@@ -70,7 +70,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	);
 	HWND hWnd_button1 = CreateWindow(
 		L"button",
-		L"Очистить",
+		L"Clear",
 		WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		5, 50, 150, 30,
 		hWnd,
@@ -80,7 +80,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	);
 	HWND hWnd_button2 = CreateWindow(
 		L"button",
-		L"Передать текст",
+		L"Send text",
 		WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		160, 50, 300, 30,
 		hWnd,
@@ -130,12 +130,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			if(LOWORD(wParam) == 2) {
 				wchar_t* str = new wchar_t[50];
 				GetDlgItemText(hWnd, 3, str, 50);
-				COPYDATASTRUCT cd;
-				cd.dwData = 0;
-				cd.cbData = 2 * wcslen(str) + 1;
-				cd.lpData = str;
-				HWND hRecieverWnd = FindWindow(NULL, otherWindowClassname);
-				if (hRecieverWnd != 0) {
+				COPYDATASTRUCT cd {
+					.dwData = 0,
+					.cbData = 2 * wcslen(str) + 1,
+					.lpData = str,
+				};
+				HWND hRecieverWnd = FindWindow(otherWindowClassname, NULL);
+				if (hRecieverWnd) {
 					SendMessage(hRecieverWnd, WM_COPYDATA, 0, (LPARAM)&cd);
 				} else {
 					ErrorBox((L"Can't find receiver window with classname \"" + std::wstring(otherWindowClassname) + L"\"").c_str());

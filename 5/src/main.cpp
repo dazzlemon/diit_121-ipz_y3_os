@@ -7,6 +7,8 @@
 #include <string.h>
 #include <tchar.h>
 
+#define MB_MODALERROR (MB_OK | MB_ICONERROR | MB_APPLMODAL)
+
 const wchar_t szWindowClass[] = L"OS5";
 const wchar_t szTitle[] = L"OS5";
 HINSTANCE hInst;
@@ -28,7 +30,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	wcex.lpszClassName = szWindowClass;
 	wcex.hIconSm       = LoadIcon(wcex.hInstance, IDI_APPLICATION);
 	if (!RegisterClassEx(&wcex)) {
-		MessageBox(NULL, L"Call to RegisterClassEx failed!", L"Message", MB_OK);
+		MessageBox(NULL, L"Call to RegisterClassEx failed!", L"Message", MB_MODALERROR);
 		return 1;
 	}
 	hInst = hInstance;
@@ -73,7 +75,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		NULL
 	);
 	if (!hWnd) {
-		MessageBox(NULL, L"Call to CreateWindow failed!", L"Message", MB_OK);
+		MessageBox(NULL, L"Call to CreateWindow failed!", L"Message", MB_MODALERROR);
 		return 1;
 	}
 	MoveWindow(hWnd, 700, 100, 500, 120, TRUE);
@@ -118,11 +120,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 				cd.dwData = 0;
 				cd.cbData = wcslen(str) + 1;
 				cd.lpData = str;
-				HWND hRecieverWnd = FindWindow(NULL, L"Lab1");
+				HWND hRecieverWnd = FindWindow(NULL, L"Lab5");
 				if (hRecieverWnd != 0) {
 					SendMessage(hRecieverWnd, WM_COPYDATA, 0, (LPARAM)&cd);
 				} else {
-					MessageBox(NULL, L"Окно приемника не создано", L"Message", MB_OK);
+					MessageBox(NULL, L"Окно приемника не создано", L"Message", MB_MODALERROR);
 				}
 			}
 			break;

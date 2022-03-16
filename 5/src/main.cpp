@@ -120,7 +120,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 				cd.dwData = 0;
 				cd.cbData = wcslen(str) + 1;
 				cd.lpData = str;
-				HWND hRecieverWnd = FindWindow(NULL, L"Lab5");
+				HWND hRecieverWnd = FindWindow(NULL, L"OS5");
 				if (hRecieverWnd != 0) {
 					SendMessage(hRecieverWnd, WM_COPYDATA, 0, (LPARAM)&cd);
 				} else {

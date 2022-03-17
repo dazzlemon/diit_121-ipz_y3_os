@@ -95,9 +95,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 }
 
 enum class Player { X, O };
-using Grid = std::array<std::array<
-	std::optional<Player>
-, 3>, 3>;
+using Grid = std::array<std::optional<Player>, 9>;
 
 #define Empty std::optional<Player>{}
 
@@ -112,19 +110,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			break;
 		case WM_COPYDATA: {
 			PCOPYDATASTRUCT s = (PCOPYDATASTRUCT)lParam;
-			int id = LOWORD(LPARAM(s->lpData));
-			int i = id / 3;
-			int j = id % 3;
-			grid[i][j] = std::optional(isSecondPlayer ? Player::X : Player::O);
+			int id = *reinterpret_cast<int*>(s->lpData);
+			grid[id] = std::optional(isSecondPlayer ? Player::X : Player::O);
 
 			// set button text
 			hdc = BeginPaint(hWnd, &ps);
 			SetDlgItemText(hWnd, id, isSecondPlayer ? L"X" : L"O");
 			EndPaint(hWnd, &ps);
 
-			// enable empty buttons(
+			// enable empty buttons
 			for (int i = 0; i < 9; i++) {
-				if (!grid[i][j]) {
+				if (!grid[i]) {
 					EnableWindow(GetDlgItem(hWnd, i), true);
 				}
 			}
@@ -134,15 +130,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			HWND hRecieverWnd = FindWindow(otherWindowClassname, NULL);
 			if (hRecieverWnd) {
 				int id = LOWORD(wParam);
-				int i = id / 3;
-				int j = id % 3;
-				grid[i][j] = std::optional(isSecondPlayer ? Player::O : Player::X);
+				grid[id] = std::optional(isSecondPlayer ? Player::O : Player::X);
 
 				// set button text
 				hdc = BeginPaint(hWnd, &ps);
-				if (!SetDlgItemText(hWnd, LOWORD(wParam), isSecondPlayer ? L"O" : L"X")) {
-					ErrorBox((L"Text didn't change" + std::to_wstring(GetLastError())).c_str());
-				}
+				!SetDlgItemText(hWnd, LOWORD(wParam), isSecondPlayer ? L"O" : L"X");
 				EndPaint(hWnd, &ps);
 
 				// disable own buttons
@@ -153,10 +145,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 				// ask other window to enable it's buttons
 				COPYDATASTRUCT cd {
 					.dwData = 0,
-					.cbData = sizeof(wParam),
-					.lpData = PVOID(wParam),
+					.cbData = sizeof(id),
+					.lpData = PVOID(&id),
 				};
+
+				SetLastError(NOERROR);
 				SendMessage(hRecieverWnd, WM_COPYDATA, 0, (LPARAM)&cd);
+				auto err = GetLastError();
+				if (err != NOERROR) {
+					ErrorBox((L"SendMessage err " + std::to_wstring(err)).c_str());
+				}
 			} else {
 				ErrorBox((L"Can't find receiver window with classname \"" + std::wstring(otherWindowClassname) + L"\"").c_str());
 			}

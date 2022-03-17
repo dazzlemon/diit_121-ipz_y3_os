@@ -8,7 +8,6 @@
 #include <tchar.h>
 #include <string>
 #include <array>
-#include <optional>
 
 #define MB_MODALERROR (MB_OK | MB_ICONERROR | MB_APPLMODAL)
 #define ErrorBox(msg) MessageBox(NULL, msg, L"Message", MB_MODALERROR)
@@ -94,12 +93,62 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	return msg.wParam;
 }
 
-enum class Player { X, O };
-using Grid = std::array<std::optional<Player>, 9>;
+enum Player { PlayerX = 1, PlayerO = -1, PlayerEmpty = 0};
+enum class GameState { WinnerX, WinnerO, Tie, Continue };
+using Grid = std::array<Player, 9>;
+
+struct Message {
+	int id;
+	GameState gameState;
+};
 
 #define Empty std::optional<Player>{}
 
 Grid grid;
+
+bool isWinner(Grid grid, size_t row, size_t col) {
+	auto player = grid[row * 3 + col];
+	// check row
+	if (
+		grid[row * 3    ] +
+		grid[row * 3 + 1] +
+		grid[row * 3 + 2] == player * 3
+	) {
+		return true;
+	}
+	// check column
+	if (
+		grid[        col] +
+		grid[1 * 3 + col] +
+		grid[2 * 3 + col] == player * 3
+	) {
+		return true;
+	}
+
+	// check main diag
+	if (
+		row == col &&
+		grid[0] +
+		grid[4] +
+		grid[8] == player * 3
+	) {
+		return true;
+	}
+	// check anti diag
+	if (
+		row + col == 2 &&
+		grid[2] +
+		grid[4] +
+		grid[6] == player * 3
+	) {
+		return true;
+	}
+	return false;
+}
+
+bool isFull(Grid grid) {
+	return std::all_of(grid.begin(), grid.end(), [](int i) { return i; });
+}
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	PAINTSTRUCT ps;
@@ -110,13 +159,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			break;
 		case WM_COPYDATA: {
 			PCOPYDATASTRUCT s = (PCOPYDATASTRUCT)lParam;
-			int id = *reinterpret_cast<int*>(s->lpData);
-			grid[id] = std::optional(isSecondPlayer ? Player::X : Player::O);
+			Message message = *reinterpret_cast<Message*>(s->lpData);
+			grid[message.id] = isSecondPlayer ? PlayerX : PlayerO;
 
 			// set button text
 			hdc = BeginPaint(hWnd, &ps);
-			SetDlgItemText(hWnd, id, isSecondPlayer ? L"X" : L"O");
+			SetDlgItemText(hWnd, message.id, isSecondPlayer ? L"X" : L"O");
 			EndPaint(hWnd, &ps);
+			
+			if (message.gameState != GameState::Continue) {
+				PostQuitMessage(0);
+				break;
+			}
 
 			// enable empty buttons
 			for (int i = 0; i < 9; i++) {
@@ -130,7 +184,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			HWND hRecieverWnd = FindWindow(otherWindowClassname, NULL);
 			if (hRecieverWnd) {
 				int id = LOWORD(wParam);
-				grid[id] = std::optional(isSecondPlayer ? Player::O : Player::X);
+				grid[id] = isSecondPlayer ? PlayerO : PlayerX;
 
 				// set button text
 				hdc = BeginPaint(hWnd, &ps);
@@ -142,19 +196,39 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 					EnableWindow(GetDlgItem(hWnd, i), false);
 				}
 
+				Message message {
+					.id = id,
+					.gameState = isWinner(grid, id / 3, id % 3)
+						? isSecondPlayer
+							? GameState::WinnerO
+							: GameState::WinnerX
+						: isFull(grid)
+							? GameState::Tie
+							: GameState::Continue
+				};
 				// ask other window to enable it's buttons
 				COPYDATASTRUCT cd {
 					.dwData = 0,
-					.cbData = sizeof(id),
-					.lpData = PVOID(&id),
+					.cbData = sizeof(message),
+					.lpData = PVOID(&message),
 				};
-
-				SetLastError(NOERROR);
-				SendMessage(hRecieverWnd, WM_COPYDATA, 0, (LPARAM)&cd);
-				auto err = GetLastError();
-				if (err != NOERROR) {
-					ErrorBox((L"SendMessage err " + std::to_wstring(err)).c_str());
+				switch (message.gameState) {
+					case GameState::WinnerO:
+						ErrorBox(L"O's won!");
+						PostQuitMessage(0);
+						break;
+					case GameState::WinnerX:
+						ErrorBox(L"X's won!");
+						PostQuitMessage(0);
+						break;
+					case GameState::Tie:
+						ErrorBox(L"Tie!");
+						PostQuitMessage(0);
+						break;
+					default:
+						break;
 				}
+				SendMessage(hRecieverWnd, WM_COPYDATA, 0, (LPARAM)&cd);
 			} else {
 				ErrorBox((L"Can't find receiver window with classname \"" + std::wstring(otherWindowClassname) + L"\"").c_str());
 			}

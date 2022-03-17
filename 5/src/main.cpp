@@ -7,13 +7,18 @@
 #include <string.h>
 #include <tchar.h>
 #include <string>
+#include <array>
+#include <optional>
 
 #define MB_MODALERROR (MB_OK | MB_ICONERROR | MB_APPLMODAL)
 #define ErrorBox(msg) MessageBox(NULL, msg, L"Message", MB_MODALERROR)
 
+#define CELLSIZE 150
+
 wchar_t* otherWindowClassname;
 const wchar_t szTitle[] = L"OS5";
 HINSTANCE hInst;
+bool isSecondPlayer = false;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -28,6 +33,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	}
 	const wchar_t* szWindowClass = argv[0];
 	otherWindowClassname = argv[1];
+	isSecondPlayer = FindWindow(otherWindowClassname, NULL);// if this window was created last it is secondPlayer
 
 	WNDCLASSEX wcex {
 		.cbSize        = sizeof(WNDCLASSEX),
@@ -54,50 +60,25 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
-		500, 150, NULL, NULL,
+		CELLSIZE * 3, CELLSIZE * 3, NULL, NULL,
 		hInstance,
 		NULL
 	);
-	// HWND hWnd_edit1 = CreateWindow(
-	// 	L"Edit",
-	// 	L"Enter text",
-	// 	WS_CHILD | WS_VISIBLE | WS_BORDER,
-	// 	5, 5, 100, 30,
-	// 	hWnd,
-	// 	(HMENU)3,
-	// 	hInstance,
-	// 	NULL
-	// );
-	// HWND hWnd_button1 = CreateWindow(
-	// 	L"button",
-	// 	L"Clear",
-	// 	WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-	// 	5, 50, 150, 30,
-	// 	hWnd,
-	// 	(HMENU)1,
-	// 	hInstance,
-	// 	NULL
-	// );
-	// HWND hWnd_button2 = CreateWindow(
-	// 	L"button",
-	// 	L"Send text",
-	// 	WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-	// 	160, 50, 300, 30,
-	// 	hWnd,
-	// 	(HMENU)2,
-	// 	hInstance,
-	// 	NULL
-	// );
-	HWND hWnd_turnButton = CreateWindow(
-		L"button",
-		L"Send text",
-		WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		160, 50, 300, 30,
-		hWnd,
-		(HMENU)1,
-		hInstance,
-		NULL
-	);
+	std::array<std::array<HWND, 3>, 3> tictactoeButtons;
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			tictactoeButtons[i][j] = CreateWindow(
+				L"button",
+				L"_",
+				WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | (isSecondPlayer ? WS_DISABLED : 0),
+				0 + i * CELLSIZE, 0 + j * CELLSIZE, CELLSIZE, CELLSIZE,
+				hWnd,
+				HMENU(3 * i + j),
+				hInstance,
+				NULL
+			);
+		}
+	}
 	if (!hWnd) {
 		ErrorBox(L"Call to CreateWindow failed!");
 		return 1;
@@ -113,6 +94,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	return msg.wParam;
 }
 
+enum class Player { X, O };
+using Grid = std::array<std::array<
+	std::optional<Player>
+, 3>, 3>;
+
+#define Empty std::optional<Player>{}
+
+Grid grid;
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	PAINTSTRUCT ps;
 	HDC hdc;
@@ -120,54 +110,54 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		case WM_DESTROY:
 			PostQuitMessage(0);
 			break;
-		case WM_PAINT:
-			break;
 		case WM_COPYDATA: {
-			// PCOPYDATASTRUCT s = (PCOPYDATASTRUCT)lParam;
-			// wchar_t* str = new wchar_t[50];
-			// wcscpy(str, (LPCWSTR)s->lpData);
-			// hdc = BeginPaint(hWnd, &ps);
-			// SetDlgItemText(hWnd, 3, str);
-			// EndPaint(hWnd, &ps);
-			
-			EnableWindow(GetDlgItem(hWnd, 1), true);
+			PCOPYDATASTRUCT s = (PCOPYDATASTRUCT)lParam;
+			int id = LOWORD(LPARAM(s->lpData));
+			int i = id / 3;
+			int j = id % 3;
+			grid[i][j] = std::optional(isSecondPlayer ? Player::X : Player::O);
+
+			// set button text
+			hdc = BeginPaint(hWnd, &ps);
+			SetDlgItemText(hWnd, id, isSecondPlayer ? L"X" : L"O");
+			EndPaint(hWnd, &ps);
+
+			// enable empty buttons(
+			for (int i = 0; i < 9; i++) {
+				if (!grid[i][j]) {
+					EnableWindow(GetDlgItem(hWnd, i), true);
+				}
+			}
 			break;
 		}
 		case WM_COMMAND: {
 			HWND hRecieverWnd = FindWindow(otherWindowClassname, NULL);
 			if (hRecieverWnd) {
-				wchar_t* str = L"test";
+				int id = LOWORD(lParam);
+				int i = id / 3;
+				int j = id % 3;
+				grid[i][j] = std::optional(isSecondPlayer ? Player::O : Player::X);
+
+				// set button text
+				hdc = BeginPaint(hWnd, &ps);
+				SetDlgItemText(hWnd, LOWORD(lParam), isSecondPlayer ? L"O" : L"X");
+				EndPaint(hWnd, &ps);
+
+				// disable own buttons
+				for (int i = 0; i < 9; i++) {
+					EnableWindow(GetDlgItem(hWnd, i), false);
+				}
+
+				// ask other window to enable it's buttons
 				COPYDATASTRUCT cd {
 					.dwData = 0,
-					.cbData = sizeof(wchar_t) * wcslen(str) + 1,// + 1 is for '\0'
-					.lpData = str,
+					.cbData = sizeof(wParam),
+					.lpData = PVOID(wParam),
 				};
-				EnableWindow(GetDlgItem(hWnd, 1), false);
 				SendMessage(hRecieverWnd, WM_COPYDATA, 0, (LPARAM)&cd);
 			} else {
 				ErrorBox((L"Can't find receiver window with classname \"" + std::wstring(otherWindowClassname) + L"\"").c_str());
 			}
-
-			// if(LOWORD(wParam) == 1) {
-			// 	hdc = BeginPaint(hWnd, &ps);
-			// 	SetDlgItemText(hWnd, 3, L"");
-			// 	EndPaint(hWnd, &ps);
-			// }
-			// if(LOWORD(wParam) == 2) {
-			// 	wchar_t* str = new wchar_t[50];
-			// 	GetDlgItemText(hWnd, 3, str, 50);
-			// 	COPYDATASTRUCT cd {
-			// 		.dwData = 0,
-			// 		.cbData = sizeof(wchar_t) * wcslen(str) + 1,// + 1 is for '\0'
-			// 		.lpData = str,
-			// 	};
-			// 	HWND hRecieverWnd = FindWindow(otherWindowClassname, NULL);
-			// 	if (hRecieverWnd) {
-			// 		SendMessage(hRecieverWnd, WM_COPYDATA, 0, (LPARAM)&cd);
-			// 	} else {
-			// 		ErrorBox((L"Can't find receiver window with classname \"" + std::wstring(otherWindowClassname) + L"\"").c_str());
-			// 	}
-			// }
 			break;
 		}
 		default:

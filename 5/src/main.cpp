@@ -58,33 +58,43 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		hInstance,
 		NULL
 	);
-	HWND hWnd_edit1 = CreateWindow(
-		L"Edit",
-		L"Enter text",
-		WS_CHILD | WS_VISIBLE | WS_BORDER,
-		5, 5, 100, 30,
-		hWnd,
-		(HMENU)3,
-		hInstance,
-		NULL
-	);
-	HWND hWnd_button1 = CreateWindow(
-		L"button",
-		L"Clear",
-		WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		5, 50, 150, 30,
-		hWnd,
-		(HMENU)1,
-		hInstance,
-		NULL
-	);
-	HWND hWnd_button2 = CreateWindow(
+	// HWND hWnd_edit1 = CreateWindow(
+	// 	L"Edit",
+	// 	L"Enter text",
+	// 	WS_CHILD | WS_VISIBLE | WS_BORDER,
+	// 	5, 5, 100, 30,
+	// 	hWnd,
+	// 	(HMENU)3,
+	// 	hInstance,
+	// 	NULL
+	// );
+	// HWND hWnd_button1 = CreateWindow(
+	// 	L"button",
+	// 	L"Clear",
+	// 	WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+	// 	5, 50, 150, 30,
+	// 	hWnd,
+	// 	(HMENU)1,
+	// 	hInstance,
+	// 	NULL
+	// );
+	// HWND hWnd_button2 = CreateWindow(
+	// 	L"button",
+	// 	L"Send text",
+	// 	WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+	// 	160, 50, 300, 30,
+	// 	hWnd,
+	// 	(HMENU)2,
+	// 	hInstance,
+	// 	NULL
+	// );
+	HWND hWnd_turnButton = CreateWindow(
 		L"button",
 		L"Send text",
 		WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 		160, 50, 300, 30,
 		hWnd,
-		(HMENU)2,
+		(HMENU)1,
 		hInstance,
 		NULL
 	);
@@ -113,35 +123,51 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		case WM_PAINT:
 			break;
 		case WM_COPYDATA: {
-			PCOPYDATASTRUCT s = (PCOPYDATASTRUCT)lParam;
-			wchar_t* str = new wchar_t[50];
-			wcscpy(str, (LPCWSTR)s->lpData);
-			hdc = BeginPaint(hWnd, &ps);
-			SetDlgItemText(hWnd, 3, str);
-			EndPaint(hWnd, &ps);
+			// PCOPYDATASTRUCT s = (PCOPYDATASTRUCT)lParam;
+			// wchar_t* str = new wchar_t[50];
+			// wcscpy(str, (LPCWSTR)s->lpData);
+			// hdc = BeginPaint(hWnd, &ps);
+			// SetDlgItemText(hWnd, 3, str);
+			// EndPaint(hWnd, &ps);
+			
+			EnableWindow(GetDlgItem(hWnd, 1), true);
 			break;
 		}
 		case WM_COMMAND: {
-			if(LOWORD(wParam) == 1) {
-				hdc = BeginPaint(hWnd, &ps);
-				SetDlgItemText(hWnd, 3, L"");
-				EndPaint(hWnd, &ps);
-			}
-			if(LOWORD(wParam) == 2) {
-				wchar_t* str = new wchar_t[50];
-				GetDlgItemText(hWnd, 3, str, 50);
+			HWND hRecieverWnd = FindWindow(otherWindowClassname, NULL);
+			if (hRecieverWnd) {
+				wchar_t* str = L"test";
 				COPYDATASTRUCT cd {
 					.dwData = 0,
-					.cbData = 2 * wcslen(str) + 1,
+					.cbData = sizeof(wchar_t) * wcslen(str) + 1,// + 1 is for '\0'
 					.lpData = str,
 				};
-				HWND hRecieverWnd = FindWindow(otherWindowClassname, NULL);
-				if (hRecieverWnd) {
-					SendMessage(hRecieverWnd, WM_COPYDATA, 0, (LPARAM)&cd);
-				} else {
-					ErrorBox((L"Can't find receiver window with classname \"" + std::wstring(otherWindowClassname) + L"\"").c_str());
-				}
+				EnableWindow(GetDlgItem(hWnd, 1), false);
+				SendMessage(hRecieverWnd, WM_COPYDATA, 0, (LPARAM)&cd);
+			} else {
+				ErrorBox((L"Can't find receiver window with classname \"" + std::wstring(otherWindowClassname) + L"\"").c_str());
 			}
+
+			// if(LOWORD(wParam) == 1) {
+			// 	hdc = BeginPaint(hWnd, &ps);
+			// 	SetDlgItemText(hWnd, 3, L"");
+			// 	EndPaint(hWnd, &ps);
+			// }
+			// if(LOWORD(wParam) == 2) {
+			// 	wchar_t* str = new wchar_t[50];
+			// 	GetDlgItemText(hWnd, 3, str, 50);
+			// 	COPYDATASTRUCT cd {
+			// 		.dwData = 0,
+			// 		.cbData = sizeof(wchar_t) * wcslen(str) + 1,// + 1 is for '\0'
+			// 		.lpData = str,
+			// 	};
+			// 	HWND hRecieverWnd = FindWindow(otherWindowClassname, NULL);
+			// 	if (hRecieverWnd) {
+			// 		SendMessage(hRecieverWnd, WM_COPYDATA, 0, (LPARAM)&cd);
+			// 	} else {
+			// 		ErrorBox((L"Can't find receiver window with classname \"" + std::wstring(otherWindowClassname) + L"\"").c_str());
+			// 	}
+			// }
 			break;
 		}
 		default:

@@ -19,6 +19,7 @@ wchar_t* otherWindowClassname;
 const wchar_t szTitle[] = L"OS5";
 HINSTANCE hInst;
 bool isSecondPlayer = false;
+std::array<HWND, 9> buttonHandles;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -64,10 +65,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		hInstance,
 		NULL
 	);
-	std::array<std::array<HWND, 3>, 3> tictactoeButtons;
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
-			tictactoeButtons[i][j] = CreateWindow(
+			buttonHandles[i * 3 + j] = CreateWindow(
 				L"button",
 				L"_",
 				WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | (isSecondPlayer ? WS_DISABLED : 0),
@@ -133,14 +133,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		case WM_COMMAND: {
 			HWND hRecieverWnd = FindWindow(otherWindowClassname, NULL);
 			if (hRecieverWnd) {
-				int id = LOWORD(lParam);
+				int id = LOWORD(wParam);
 				int i = id / 3;
 				int j = id % 3;
 				grid[i][j] = std::optional(isSecondPlayer ? Player::O : Player::X);
 
 				// set button text
 				hdc = BeginPaint(hWnd, &ps);
-				SetDlgItemText(hWnd, LOWORD(lParam), isSecondPlayer ? L"O" : L"X");
+				if (!SetDlgItemText(hWnd, LOWORD(wParam), isSecondPlayer ? L"O" : L"X")) {
+					ErrorBox((L"Text didn't change" + std::to_wstring(GetLastError())).c_str());
+				}
 				EndPaint(hWnd, &ps);
 
 				// disable own buttons

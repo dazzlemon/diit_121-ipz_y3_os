@@ -1,0 +1,5 @@
+if [ "$#" -eq 2 ]; then
+	wine bin/main.exe $1 $2
+else
+	wine bin/main.exe
+fi

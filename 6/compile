@@ -1,4 +1,4 @@
-echo "compiling exe"
+echo "compiling normal exe"
 x86_64-w64-mingw32-g++ -std=c++20 -o bin/main.exe \
 	src/main.cpp \
 	src/eval.hpp \
@@ -7,3 +7,7 @@ x86_64-w64-mingw32-g++ -std=c++20 -o bin/main.exe \
 echo "compiling dll"
 x86_64-w64-mingw32-g++ -std=c++20 -shared -o bin/eval.dll \
 	src/eval.cpp \
+
+echo "compiling exe to use dll"
+x86_64-w64-mingw32-g++ -std=c++20 -DDLL -o bin/main_dll.exe \
+	src/main.cpp

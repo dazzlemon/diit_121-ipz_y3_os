@@ -1,4 +1,4 @@
-#define DLL
+// #define DLL
 
 #include <iostream>
 #include <vector>

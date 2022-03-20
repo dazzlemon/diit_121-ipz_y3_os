@@ -7,10 +7,19 @@
 #include <iterator>
 #include <map>
 #include <functional>
+#include <iostream>
 
 //works only for ints
 class PostfixEvaluator {
 public:
+	PostfixEvaluator() {
+		std::cout << "PostfixEvaluator constructor\n";
+	}
+
+	~PostfixEvaluator() {
+		std::cout << "PostfixEvaluator destructor\n";
+	}
+
 	std::string eval(const std::string& postfix) {
 		std::vector<std::string> postfix_tokenized = __tokenize(postfix);
 		std::string res;

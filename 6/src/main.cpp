@@ -1,4 +1,4 @@
-// #define DLL
+#define DLL
 
 #include <iostream>
 #include <vector>
@@ -8,13 +8,11 @@
 #ifdef DLL
 #include <windows.h>
 HINSTANCE module;
-char* (__stdcall *MyFunc)(const char*, int);
-
-char* eval(const char* expr) {
-	return MyFunc(expr, NULL);	
-}
+char* (__stdcall *lpfnEval)(const char*, int);
+#define EVAL(x) lpfnEval(x, 0)
 #else
 #include "eval.hpp"
+#define EVAL(x) eval(x)
 #endif
 
 void tests() {
@@ -34,7 +32,7 @@ void tests() {
 		{"12 4 / 1 -",                     "2"},
 		{"12 4 1 - /",                     "4"},
 		{"15 7 1 1 + - / 3 * 2 1 1 + + -", "5"},
-                {"15 0 /",   "error: division by zero"},
+		{"15 0 /",   "error: division by zero"},
 		{"15 0 678 8", "error: bad expression"},
 		{"/ + * -",    "error: bad expression"}
 	};
@@ -43,7 +41,7 @@ void tests() {
 	for (auto& test : tests) {
 		std::cout << "expression: " << test.first << std::endl;
 		std::cout << "expected result: " << test.second << std::endl;
-		auto res = eval(test.first);
+		auto res = EVAL(test.first);
 		std::cout << "given result: " << res << std::endl;
 		bool passed = res == test.second;
 		tests_passed += passed;
@@ -69,8 +67,8 @@ int main() {
 		std::cout << "Error, cant load module!\n";
 		return 1;
 	}
-	MyFunc = (char*(__stdcall *)(const char*, int))GetProcAddress(module, "eval");
-	if (!MyFunc) {
+	lpfnEval = (char*(__stdcall *)(const char*, int))GetProcAddress(module, "eval");
+	if (!lpfnEval) {
 		std::cout << "Error, cant load func!\n";
 		return 1;
 	}
@@ -83,7 +81,7 @@ int main() {
 	while(continue_) {
 		std::cout << "Input expression: " << std::endl;
 		std::getline(std::cin, expr);
-		std::cout << "Result: " << eval(expr.c_str()) << std::endl;
+		std::cout << "Result: " << EVAL(expr.c_str()) << std::endl;
 		continue_ = getCont();
 	}
 	#ifdef DLL

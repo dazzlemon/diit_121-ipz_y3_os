@@ -11,3 +11,8 @@ x86_64-w64-mingw32-g++ -std=c++20 -shared -o bin/eval.dll \
 echo "compiling exe to use dll"
 x86_64-w64-mingw32-g++ -std=c++20 -DDLL -o bin/main_dll.exe \
 	src/main.cpp
+
+echo "compiling exe to use dll implictily"
+x86_64-w64-mingw32-g++ -std=c++20 -DDLL -DEXPL -o bin/main_dll_impl.exe \
+	src/main.cpp \
+	bin/eval.dll

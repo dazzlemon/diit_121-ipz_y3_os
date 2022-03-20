@@ -6,10 +6,15 @@
 #include <utility>
 
 #ifdef DLL
-#include <windows.h>
-HINSTANCE module;
-char* (__stdcall *lpfnEval)(const char*, int);
-#define EVAL(x) lpfnEval(x, 0)
+	#ifdef EXPL
+	extern "C" char* __declspec(dllimport) __stdcall eval(const char* expr);
+	#define EVAL(x) eval(x)
+	#else
+		#include <windows.h>
+		HINSTANCE module;
+		char* (__stdcall *lpfnEval)(const char*, int);
+		#define EVAL(x) lpfnEval(x, 0)
+	#endif
 #else
 #include "eval.hpp"
 #define EVAL(x) eval(x)
@@ -62,16 +67,18 @@ bool getCont() {
 
 int main() {
 	#ifdef DLL
-	module = LoadLibrary("eval.dll");
-	if (!module) {
-		std::cout << "Error, cant load module!\n";
-		return 1;
-	}
-	lpfnEval = (char*(__stdcall *)(const char*, int))GetProcAddress(module, "eval");
-	if (!lpfnEval) {
-		std::cout << "Error, cant load func!\n";
-		return 1;
-	}
+	#ifndef EXPL
+		module = LoadLibrary("eval.dll");
+		if (!module) {
+			std::cout << "Error, cant load module!\n";
+			return 1;
+		}
+		lpfnEval = (char*(__stdcall *)(const char*, int))GetProcAddress(module, "eval");
+		if (!lpfnEval) {
+			std::cout << "Error, cant load func!\n";
+			return 1;
+		}
+	#endif
 	#endif
 
 	//tests();
@@ -85,6 +92,8 @@ int main() {
 		continue_ = getCont();
 	}
 	#ifdef DLL
-	FreeLibrary(module);
+	#ifndef EXPL
+		FreeLibrary(module);
+	#endif
 	#endif
 }

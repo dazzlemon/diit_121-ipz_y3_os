@@ -1,41 +1,13 @@
-// #include <windows.h>
-// #include <string>
-// #include <iostream>
-// #include "dll22.hpp"
-
-// int main() {
-// 	#if FALSE
-// 	HINSTANCE module = LoadLibrary("dll22.dll");
-// 	if (!module) {
-// 		std::cout << "Error, cant load module!\n";
-// 	}
-
-// 	int (__stdcall *MyFunc)(int, int) = (int(__stdcall *)(int, int))GetProcAddress(module, "f1");
-// 	if (!MyFunc) {
-// 		std::cout << "Error, cant load func!\n";
-// 	} else {
-// 		std::cout << "explicit: " << MyFunc(2, NULL) << '\n';
-// 	}
-// 	FreeLibrary(module);
-// 	#else
-// 	std::cout << "implicit: " << f1(2) << '\n';
-// 	#endif
-// 	return 0;
-// }
-
-// #include "postfix_evaluator.hpp"
-
 // #define DLL
 
 #include <iostream>
 #include <vector>
 #include <string>
 #include <utility>
+
 #ifdef DLL
-#include "eval.hpp"
-#else
 #include <windows.h>
-std::string eval(std::string expr) {
+char* eval(const char* expr) {
 	HINSTANCE module = LoadLibrary("eval.dll");
 	if (!module) {
 		std::cout << "Error, cant load module!\n";
@@ -46,16 +18,16 @@ std::string eval(std::string expr) {
 		std::cout << "Error, cant load func!\n";
 		return "Error, cant load func!\n";
 	}
-	auto res = MyFunc(expr.c_str(), NULL);
-	auto ret = std::string(res);
-	delete res;
+	auto res = MyFunc(expr, NULL);
 	FreeLibrary(module);
-	return ret;
+	return res;
 }
+#else
+#include "eval.hpp"
 #endif
 
 void tests() {
-	std::vector<std::pair<std::string, std::string>> tests = {
+	std::vector<std::pair<const char*, const char*>> tests = {
 		{"1 2 + 3 /",                      "1"},
 		{"8 7 +",                         "15"},
 		{"99 11 + 8 7 + +",              "125"},
@@ -107,7 +79,7 @@ int main() {
 	while(continue_) {
 		std::cout << "Input expression: " << std::endl;
 		std::getline(std::cin, expr);
-		std::cout << "Result: " << eval(expr) << std::endl;
+		std::cout << "Result: " << eval(expr.c_str()) << std::endl;
 		continue_ = getCont();
 	}
 }

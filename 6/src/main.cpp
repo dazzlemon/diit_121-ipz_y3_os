@@ -7,20 +7,11 @@
 
 #ifdef DLL
 #include <windows.h>
+HINSTANCE module;
+char* (__stdcall *MyFunc)(const char*, int);
+
 char* eval(const char* expr) {
-	HINSTANCE module = LoadLibrary("eval.dll");
-	if (!module) {
-		std::cout << "Error, cant load module!\n";
-		return "Error, cant load module!\n";
-	}
-	char* (__stdcall *MyFunc)(const char*, int) = (char*(__stdcall *)(const char*, int))GetProcAddress(module, "eval");
-	if (!MyFunc) {
-		std::cout << "Error, cant load func!\n";
-		return "Error, cant load func!\n";
-	}
-	auto res = MyFunc(expr, NULL);
-	FreeLibrary(module);
-	return res;
+	return MyFunc(expr, NULL);	
 }
 #else
 #include "eval.hpp"
@@ -72,6 +63,19 @@ bool getCont() {
 }
 
 int main() {
+	#ifdef DLL
+	module = LoadLibrary("eval.dll");
+	if (!module) {
+		std::cout << "Error, cant load module!\n";
+		return 1;
+	}
+	MyFunc = (char*(__stdcall *)(const char*, int))GetProcAddress(module, "eval");
+	if (!MyFunc) {
+		std::cout << "Error, cant load func!\n";
+		return 1;
+	}
+	#endif
+
 	//tests();
 	std::string expr;
 	bool continue_ = true;
@@ -82,4 +86,7 @@ int main() {
 		std::cout << "Result: " << eval(expr.c_str()) << std::endl;
 		continue_ = getCont();
 	}
+	#ifdef DLL
+	FreeLibrary(module);
+	#endif
 }

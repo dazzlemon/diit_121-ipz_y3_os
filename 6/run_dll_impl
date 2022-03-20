@@ -1,0 +1,1 @@
+wine bin/main_dll_impl.exe "$@"

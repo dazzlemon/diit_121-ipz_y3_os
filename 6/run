@@ -1,1 +1,1 @@
-wine release/main.exe "$@"
+wine bin/main.exe "$@"

@@ -12,7 +12,7 @@
  * returns name of the function that errored out
  */
 std::optional<std::string> writeToFile(const char* fileName, void* str, size_t size) {
-	int fileDescriptor = creat(fileName, 0666);
+	int fileDescriptor = creat(fileName, 666);
 	if (fileDescriptor == -1) {
 		return "creat";
 	}

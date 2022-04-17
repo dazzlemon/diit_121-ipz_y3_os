@@ -24,7 +24,7 @@ std::optional<std::string> writeToFile(
 	if (fileDescriptor == -1) {
 		return "creat";
 	}
-	if (write(fileDescriptor, str, sizeof(str)) == -1) {
+	if (write(fileDescriptor, str, size) == -1) {
 		return "write";
 	}
 	if (close(fileDescriptor) == -1) {

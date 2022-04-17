@@ -35,10 +35,10 @@ void signalHandler(int) {
 		fileName, static_cast<void*>(buffer), sizeof(buffer) / sizeof(*buffer)
 	);
 	if (res.has_value()) {
-		std::cout << res.value() << " returned -1\n";
+		std::cout << "parent process: " << res.value() << " returned -1\n";
 		return;
 	}
-	std::cout << buffer << '\n';
+	std::cout << "parent process: read '" << buffer << "'\n";
 }
 
 int main(int argc, char* argv[]) {

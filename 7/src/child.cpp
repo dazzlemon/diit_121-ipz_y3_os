@@ -64,6 +64,7 @@ int main(int argc, char* argv[]) {
 		          << "errno: " << errno << '\n';
 		return -1;
 	}
+	std::cout << "child process: wrote '" << argv[2] << "'\n"; 
 
 	// signal to parent process
 	if (kill(getppid(), SIGUSR1) != 0) {

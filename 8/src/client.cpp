@@ -1,56 +1,36 @@
-#include <iostream>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/msg.h>
-#include <sys/ipc.h>
-
 #include "common.h"
+
+#include <cstring>
+#include <string>
 
 int main() {
 	std::cout << "Client started\n";
-
-	key_t myIpcKey = ftok(".", 'a');
-	if (myIpcKey == -1) {
-		std::cout << "error while getting ipc key (ftok), errno: " << errno << '\n';
-		return -1;
-	}
-	std::cout << "ipc key: " << myIpcKey << '\n';
+	MY_IPC_KEY
 
 	auto chmod = S_IRUSR | S_IWUSR
 	           | S_IRGRP | S_IWGRP
 	           | S_IROTH | S_IWOTH;
 	int messageQueueId = msgget(myIpcKey, IPC_CREAT | chmod);
-	if (messageQueueId == -1) {
-		std::cout << "error while getting message queue id (msgget), errno: "
-		          << errno << '\n';
-		return -1;
-	}
-	std::cout << "message queue id: " << messageQueueId << '\n';
+	CHECK_MESSAGE_QUEUE_ID
 	
 	Message message;
 	message.type = 1;
-
-	std::cout << "please input 5 integers:\n";
-	for (int i = 1; i <= 5; i++) {
-		std::cout << "\tinteger #" << i << ": ";
-		std::cin >> message.array[i - 1];
+	std::cout << "please input message:\n";
+	std::string string;
+	std::getline(std::cin, string);
+	if (string.length() > 255) {
+		std::cout << "error: message too big to send\n";
+		return -1;
 	}
+	std::copy(string.begin(), string.end(), message.string);
+	message.string[string.length()] = '\0';
 
 	int result = msgsnd(
 		messageQueueId,
 		(struct msgbuf*) (&message),
-		sizeof(message.array),
+		sizeof(message.string),
 		0
 	);
-	if (result == -1) {
-		std::cout << "error while sending message (msgsnd), errno: "
-		          << errno << '\n';
-		return -1;
-	}
-	std::cout << "sent message:";
-	for (int i = 1; i <= 5; i++) {
-		std::cout << ' ' << message.array[i - 1];
-	}
-	std::cout << '\n';
+	CHECK_RESULT("sending", "msgsnd")
+	std::cout << "sent message: \"" << message.string << "\"\n";
 }

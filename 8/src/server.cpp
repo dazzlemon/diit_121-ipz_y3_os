@@ -1,10 +1,4 @@
-#include <iostream>
 #include <ctime>
-#include <filesystem>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/msg.h>
-#include <sys/ipc.h>
 
 #include "common.h"
 
@@ -31,43 +25,28 @@ std::string mode_tToString(mode_t p) {
 
 int main() {
 	std::cout << "Server started\n";
-
-	key_t myIpcKey = ftok(".", 'a');
-	if (myIpcKey == -1) {
-		std::cout << "error while getting ipc key (ftok), errno: " << errno << '\n';
-		return -1;
-	}
-	std::cout << "ipc key: " << myIpcKey << '\n';
-
+	MY_IPC_KEY
 	int messageQueueId = msgget(myIpcKey, 0);
-	if (messageQueueId == -1) {
-		std::cout << "error while getting message queue id (msgget), errno: "
-		          << errno << '\n';
-		return -1;
-	}
-	std::cout << "message queue id: " << messageQueueId << '\n';
+	CHECK_MESSAGE_QUEUE_ID
 
 	Message message;
 	int result = msgrcv(
 		messageQueueId,
 		(struct msgbuf*) (&message),
-		sizeof(message.array),
+		sizeof(message.string),
 		1,
 		0
 	);
-	if (result == -1) {
-		std::cout << "error while receiving message (msgrcv), errno: "
+	CHECK_RESULT("receiving", "msgrcv")
+	std::cout << "received message(size = " << result << "):"
+	          << " \"" << message.string << "\"\n";
+
+	msqid_ds messageQueueState;
+	if (msgctl(messageQueueId, IPC_STAT, &messageQueueState) == -1) {
+		std::cout << "error while getting message queue state (msgctl), errno:"
 		          << errno << '\n';
 		return -1;
 	}
-	std::cout << "received message(size = " << result << "):";
-	for (int i = 1; i <= 5; i++) {
-		std::cout << ' ' << message.array[i - 1];
-	}
-	std::cout << '\n';
-
-	msqid_ds messageQueueState;
-	msgctl(messageQueueId, IPC_STAT, &messageQueueState);
 	std::cout << "message queue state:\n"
 	          << "\townership and permissions:\n"
 							<< "\t\tcreator user ID: "
@@ -78,7 +57,7 @@ int main() {
 								<< messageQueueState.msg_perm.uid << '\n'
 							<< "\t\towner group ID: "
 								<< messageQueueState.msg_perm.gid << '\n'
-							<< "\t\tpermissions:"
+							<< "\t\tpermissions: "
 								<< mode_tToString(messageQueueState.msg_perm.mode) << '\n'
 						<< "\ttime of last msgsnd: "
 							<< time_tToString(messageQueueState.msg_stime) << '\n'
@@ -89,8 +68,8 @@ int main() {
 						<< "\t# of bytes in queue: " << messageQueueState.msg_cbytes << '\n'
 						<< "\t# of messages in queue: "
 							<< messageQueueState.msg_qnum << '\n'
-            << "\t maximum # of bytes in queue: "
+            << "\tmaximum # of bytes in queue: "
 							<< messageQueueState.msg_qbytes << '\n'
-						<< "\t PID of last msgsnd: " << messageQueueState.msg_lspid << '\n'
-						<< "\t PID of last msgrsv: " << messageQueueState.msg_lrpid << '\n';
+						<< "\tPID of last msgsnd: " << messageQueueState.msg_lspid << '\n'
+						<< "\tPID of last msgrsv: " << messageQueueState.msg_lrpid << '\n';
 }

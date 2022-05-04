@@ -1,6 +1,6 @@
 #include <iostream>
 #include <ctime>
-
+#include <filesystem>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/msg.h>
@@ -13,6 +13,20 @@ std::string time_tToString(time_t time) {
 	char mbstr[100];
 	std::strftime(mbstr, 100, "%d/%m/%Y %T", ltm);
 	return mbstr;
+}
+
+std::string mode_tToString(mode_t p) {
+	return std::string(
+		      (p & S_IREAD)  != 0 ? "r" : "-")
+			 + ((p & S_IWRITE) != 0 ? "w" : "-")
+			 + ((p & S_IEXEC)  != 0 ? "x" : "-")
+			 + ((p & S_IRGRP)  != 0 ? "r" : "-")
+			 + ((p & S_IWGRP)  != 0 ? "w" : "-")
+			 + ((p & S_IXGRP)  != 0 ? "x" : "-")
+			 + ((p & S_IROTH)  != 0 ? "r" : "-")
+			 + ((p & S_IWOTH)  != 0 ? "w" : "-")
+			 + ((p & S_IXOTH)  != 0 ? "x" : "-")
+			 ;
 }
 
 int main() {
@@ -64,7 +78,8 @@ int main() {
 								<< messageQueueState.msg_perm.uid << '\n'
 							<< "\t\towner group ID: "
 								<< messageQueueState.msg_perm.gid << '\n'
-							<< "\t\tpermissions:" << messageQueueState.msg_perm.mode << '\n'
+							<< "\t\tpermissions:"
+								<< mode_tToString(messageQueueState.msg_perm.mode) << '\n'
 						<< "\ttime of last msgsnd: "
 							<< time_tToString(messageQueueState.msg_stime) << '\n'
 						<< "\ttime of last msgrcv: "

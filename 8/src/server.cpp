@@ -55,7 +55,16 @@ int main() {
 	msqid_ds messageQueueState;
 	msgctl(messageQueueId, IPC_STAT, &messageQueueState);
 	std::cout << "message queue state:\n"
-	          << "\townership and permissions: TODO\n"
+	          << "\townership and permissions:\n"
+							<< "\t\tcreator user ID: "
+								<< messageQueueState.msg_perm.cuid << '\n'
+							<< "\t\tcreator group ID: "
+								<< messageQueueState.msg_perm.cgid << '\n'
+							<< "\t\towner user ID: "
+								<< messageQueueState.msg_perm.uid << '\n'
+							<< "\t\towner group ID: "
+								<< messageQueueState.msg_perm.gid << '\n'
+							<< "\t\tpermissions:" << messageQueueState.msg_perm.mode << '\n'
 						<< "\ttime of last msgsnd: "
 							<< time_tToString(messageQueueState.msg_stime) << '\n'
 						<< "\ttime of last msgrcv: "

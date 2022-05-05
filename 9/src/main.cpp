@@ -1,9 +1,34 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <deque>
 
 #include <dirent.h>
 #include <sys/stat.h>
+
+#include <iostream>
+
+// #define ENABLE_DEBUG
+
+namespace debugging {
+#ifdef ENABLE_DEBUG
+	constexpr bool debug = true;
+#else
+	constexpr bool debug = false;
+#endif
+	template <typename... Args>
+	void print(const char* file, int line, Args... args) {
+			(std::clog << "[" << file << ":" << line << "] "
+								<< ... << args) << std::endl;
+	}
+}
+
+#define DEBUG(...)                                            \
+	do {                                                        \
+			if (debugging::debug) {                                 \
+					debugging::print(__FILE__, __LINE__, __VA_ARGS__);  \
+			}                                                       \
+	} while (0)
 
 char filetypeToChar(unsigned char d_type) {
 	switch (d_type) {
@@ -102,43 +127,70 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	DIR* directory = opendir(argv[1]);
-	if (!directory) {
-		std::cout << "error: can't open directory \"" << argv[1] << "\": "
-		          << opendirErrnoToString() << '\n';
-		return -1;
-	}
-
-	auto oldErrno = errno;
-	dirent* directoryEntry;
+	std::deque<std::string> directoryNames;
+	directoryNames.push_back(argv[1]);
 
 	std::vector<fileInfo> files;
 
-	bool continue_ = true;
-	do {
-		directoryEntry = readdir(directory);
-		if (directoryEntry) {
-			struct stat statbuf;
-			if (stat(directoryEntry->d_name, &statbuf) == -1) {
-				std::cout << "error while trying to get info about file permissions, "
-				          << "errno: " << errno << '\n';
-				return -1;
-			}
-			files.push_back({
-				mode_tToString(statbuf.st_mode),
-				filetypeToChar(directoryEntry->d_type),
-				directoryEntry->d_name
-			});
-		} else {
-			continue_ = false;
+	do {// for all directories
+		bool continue_ = true;
+		
+		DIR* directory = opendir(directoryNames[0].c_str());
+		if (!directory) {
+			std::cout << "error: can't open directory \"" << argv[1] << "\": "
+								<< opendirErrnoToString() << '\n';
+			return -1;
 		}
-	} while (continue_);
-	if (errno != oldErrno) {
-		// may happen if someone deleted directory unexpectedly or something
-		// errno == EBADF // the only possible error
-		std::cout << "error while getting next directory entry (readdir)\n";
-		return -1;
-	}
+		DEBUG((std::string("directory ") + directoryNames[0] + " opened"));
+
+		int oldErrno;
+		do {// for all files
+			oldErrno = errno;
+			dirent* directoryEntry = readdir(directory);
+			if (directoryEntry) {
+				struct stat statbuf;
+				std::string filenameRelativeToPwd = directoryNames[0] + "/" +
+					directoryEntry->d_name;
+				if (stat(filenameRelativeToPwd.c_str(), &statbuf) == -1) {
+					std::cout << "error while trying to get info about file permissions "
+					          << "for file " << directoryEntry->d_name
+										<< ", errno: " << errno << '\n';
+					return -1;
+				}
+				if (std::string(directoryEntry->d_name) != "." &&
+				    std::string(directoryEntry->d_name) != ".."
+				) {
+					if (directoryEntry->d_type == DT_DIR) {
+						directoryNames.push_back(filenameRelativeToPwd);
+						DEBUG((
+							std::string("directory ") + filenameRelativeToPwd +
+							" added to directories list"
+						));
+					}
+					files.push_back({
+						mode_tToString(statbuf.st_mode),
+						filetypeToChar(directoryEntry->d_type),
+						filenameRelativeToPwd
+					});
+					DEBUG((
+						std::string("file ") + filenameRelativeToPwd + " added to file list"
+					));
+				}
+			} else {
+				continue_ = false;
+			}
+		} while (continue_);
+		if (errno != oldErrno) {
+			// may happen if someone deleted directory unexpectedly or something
+			// errno == EBADF // the only possible error
+			std::cout << "error while getting next directory entry (readdir)\n";
+			return -1;
+		}
+		closedir(directory);// TODO: check err
+		DEBUG((std::string("directory ") + directoryNames[0] + " closed"));
+		directoryNames.pop_front();
+	} while (!directoryNames.empty());
+	
 
 	std::cout << fileInfoVectorToString(files);
 }

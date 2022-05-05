@@ -2,6 +2,22 @@
 
 #include <dirent.h>
 
+std::string filetypeToString(unsigned char d_type) {
+	switch (d_type) {
+		case DT_UNKNOWN: return "unknown";
+		case DT_REG:     return "regular file";
+		case DT_DIR:     return "directory";
+		case DT_FIFO:    return "named pipe";
+		case DT_SOCK:    return "local-domain socket";
+		case DT_CHR:     return "character device";
+		case DT_BLK:     return "block device";
+		case DT_LNK:     return "symbolic link";
+		// mostly bsd, but supported in XFS and CODA with kernel codes
+		case DT_WHT:     return "whiteout";
+		default:         return ""; 
+	}
+}
+
 /**
  * argv[1] - directory name
  * argv[2] - file size (bytes)
@@ -23,8 +39,8 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	DIR* dir = opendir(argv[1]);
-	if (!dir) {
+	DIR* directory = opendir(argv[1]);
+	if (!directory) {
 		std::cout << "error: can't open directory \"" << argv[1] << "\": ";
 		switch (errno) {
 			case EACCES:
@@ -53,4 +69,27 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 	std::cout << "sucessfuly opened \"" << argv[1] << "\"\n";
+
+	auto oldErrno = errno;
+	dirent* directoryEntry;
+	bool continue_ = true;
+	do {
+		directoryEntry = readdir(directory);
+		if (directoryEntry) {
+			std::cout << "file found:\n"
+			          << "\tfilename: " << directoryEntry->d_name << '\n'
+								<< "\tfiletype: "
+								  << filetypeToString(directoryEntry->d_type) << '\n'
+								<< "\tpermission: " << "TODO" << '\n'
+								;
+		} else {
+			continue_ = false;
+		}
+	} while (continue_);
+	if (errno != oldErrno) {
+		// may happen if someone deleted directory unexpectedly or something
+		// errno == EBADF // the only possible error
+		std::cout << "error while getting next directory entry (readdir)\n";
+		return -1;
+	}
 }

@@ -28,6 +28,9 @@ int main(int argc, char* argv[]) {
 		std::cout << "error: can't open directory \"" << argv[1] << "\": ";
 		switch (errno) {
 			case EACCES:
+				// /var/db/sudo
+				// find in your system
+        // find / -type d ! -readable
 				std::cout << "permission denied";
 				break;
 			case EMFILE:

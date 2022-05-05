@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <dirent.h>
+#include <sys/stat.h>
 
 std::string filetypeToString(unsigned char d_type) {
 	switch (d_type) {
@@ -31,6 +32,20 @@ std::string opendirErrnoToString() {
 		case ENOTDIR: return "not a directory";
 		default: return "";
 	}
+}
+
+std::string mode_tToString(mode_t p) {
+	return std::string(
+		      (p & S_IREAD)  != 0 ? "r" : "-")
+			 + ((p & S_IWRITE) != 0 ? "w" : "-")
+			 + ((p & S_IEXEC)  != 0 ? "x" : "-")
+			 + ((p & S_IRGRP)  != 0 ? "r" : "-")
+			 + ((p & S_IWGRP)  != 0 ? "w" : "-")
+			 + ((p & S_IXGRP)  != 0 ? "x" : "-")
+			 + ((p & S_IROTH)  != 0 ? "r" : "-")
+			 + ((p & S_IWOTH)  != 0 ? "w" : "-")
+			 + ((p & S_IXOTH)  != 0 ? "x" : "-")
+			 ;
 }
 
 /**
@@ -68,11 +83,18 @@ int main(int argc, char* argv[]) {
 	do {
 		directoryEntry = readdir(directory);
 		if (directoryEntry) {
+			struct stat statbuf;
+			if (stat(directoryEntry->d_name, &statbuf) == -1) {
+				std::cout << "error while trying to get info about file permissions, "
+				          << "errno: " << errno << '\n';
+				return -1;
+			}
+
 			std::cout << "file found:\n"
 			          << "\tfilename: " << directoryEntry->d_name << '\n'
 								<< "\tfiletype: "
 								  << filetypeToString(directoryEntry->d_type) << '\n'
-								<< "\tpermission: " << "TODO" << '\n'
+								<< "\tpermissions: " << mode_tToString(statbuf.st_mode) << '\n'
 								;
 		} else {
 			continue_ = false;

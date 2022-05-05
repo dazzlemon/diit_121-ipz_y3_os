@@ -19,7 +19,7 @@ std::string mode_tToString(mode_t p) {
 }
 
 char mode_tToChar(mode_t p) {
-	switch (p && S_IFMT) {
+	switch (p & S_IFMT) {
 		case S_IFREG:  return 'f';
 		case S_IFDIR:  return 'd';
 		case S_IFIFO:  return 'p';

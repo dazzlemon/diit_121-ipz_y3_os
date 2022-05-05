@@ -1,21 +1,23 @@
 #include <iostream>
+#include <vector>
+#include <sstream>
 
 #include <dirent.h>
 #include <sys/stat.h>
 
-std::string filetypeToString(unsigned char d_type) {
+char filetypeToChar(unsigned char d_type) {
 	switch (d_type) {
-		case DT_UNKNOWN: return "unknown";
-		case DT_REG:     return "regular file";
-		case DT_DIR:     return "directory";
-		case DT_FIFO:    return "named pipe";
-		case DT_SOCK:    return "local-domain socket";
-		case DT_CHR:     return "character device";
-		case DT_BLK:     return "block device";
-		case DT_LNK:     return "symbolic link";
+		case DT_UNKNOWN: return 'u';
+		case DT_REG:     return 'f';
+		case DT_DIR:     return 'd';
+		case DT_FIFO:    return 'p';
+		case DT_SOCK:    return 's';
+		case DT_CHR:     return 'c';
+		case DT_BLK:     return 'b';
+		case DT_LNK:     return 'l';
 		// mostly bsd, but supported in XFS and CODA with kernel codes
-		case DT_WHT:     return "whiteout";
-		default:         return ""; 
+		case DT_WHT:     return 'w';
+		default:         return ' '; 
 	}
 }
 
@@ -48,14 +50,45 @@ std::string mode_tToString(mode_t p) {
 			 ;
 }
 
+struct fileInfo {
+	std::string permissions;
+	char        type;
+	std::string name;
+};
+
+std::string fileInfoVectorToString(std::vector<fileInfo> files) {
+	std::stringstream stringstream;
+	for (auto file : files) {
+		stringstream << file.permissions
+			           << ' ' << file.type
+								 << ' ' << file.name
+								 << '\n';
+	}
+	return stringstream.str();
+}
+
 /**
  * argv[1] - directory name
  * argv[2] - file size (bytes)
  * searches directory recursively
  * For all files larger than argv[2] (bytes) prints the following information:
  *   filename
- *   filetype (regular or directory)
+ *   filetype (in the same form that command find accepts:
+ * 	   b - block (buffered) special
+ *     c - character (unbuffered) special
+ *     d - directory
+ *     p - named pipe
+ *     f - regular file
+ *     l - symbolic link
+ *     s - socket
+ * 
+ *     u - unknown filetype (not accepted by find obviously)
+ *     w - bsd whiteout (not accepted by find too),
+ *       can be supported by XFS or CODA on linux with proper kernel
+ *   )
  *   permissions (mode)
+ * 
+ * one file per line in next format: permissions filetype filename
  */
 int main(int argc, char* argv[]) {
 	if (argc != 3) {
@@ -75,10 +108,12 @@ int main(int argc, char* argv[]) {
 		          << opendirErrnoToString() << '\n';
 		return -1;
 	}
-	std::cout << "sucessfuly opened \"" << argv[1] << "\"\n";
 
 	auto oldErrno = errno;
 	dirent* directoryEntry;
+
+	std::vector<fileInfo> files;
+
 	bool continue_ = true;
 	do {
 		directoryEntry = readdir(directory);
@@ -89,13 +124,11 @@ int main(int argc, char* argv[]) {
 				          << "errno: " << errno << '\n';
 				return -1;
 			}
-
-			std::cout << "file found:\n"
-			          << "\tfilename: " << directoryEntry->d_name << '\n'
-								<< "\tfiletype: "
-								  << filetypeToString(directoryEntry->d_type) << '\n'
-								<< "\tpermissions: " << mode_tToString(statbuf.st_mode) << '\n'
-								;
+			files.push_back({
+				mode_tToString(statbuf.st_mode),
+				filetypeToChar(directoryEntry->d_type),
+				directoryEntry->d_name
+			});
 		} else {
 			continue_ = false;
 		}
@@ -106,4 +139,6 @@ int main(int argc, char* argv[]) {
 		std::cout << "error while getting next directory entry (readdir)\n";
 		return -1;
 	}
+
+	std::cout << fileInfoVectorToString(files);
 }

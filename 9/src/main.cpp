@@ -18,6 +18,21 @@ std::string filetypeToString(unsigned char d_type) {
 	}
 }
 
+std::string opendirErrnoToString() {
+	switch (errno) {
+		// /var/db/sudo
+		// find in your system
+		// find / -type d ! -readable
+		case EACCES:  return "permission denied";
+		case EMFILE:  return "too many file descriptors in use by process";
+		case ENFILE:  return "too many files are currently opened in the system";
+		case ENOENT:  return "directory does not exist";
+		case ENOMEM:  return "insufficient memory to complete the operation";
+		case ENOTDIR: return "not a directory";
+		default: return "";
+	}
+}
+
 /**
  * argv[1] - directory name
  * argv[2] - file size (bytes)
@@ -41,31 +56,8 @@ int main(int argc, char* argv[]) {
 
 	DIR* directory = opendir(argv[1]);
 	if (!directory) {
-		std::cout << "error: can't open directory \"" << argv[1] << "\": ";
-		switch (errno) {
-			case EACCES:
-				// /var/db/sudo
-				// find in your system
-        // find / -type d ! -readable
-				std::cout << "permission denied";
-				break;
-			case EMFILE:
-				std::cout << "too many file descriptors in use by process";
-				break;
-			case ENFILE:
-				std::cout << "too many files are currently opened in the system";
-				break;
-			case ENOENT:
-				std::cout << "directory does not exist";
-				break;
-			case ENOMEM:
-				std::cout << "insufficient memory to complete the operation";
-				break;
-			case ENOTDIR:
-				std::cout << "not a directory";
-				break;
-		}
-		std::cout << '\n';
+		std::cout << "error: can't open directory \"" << argv[1] << "\": "
+		          << opendirErrnoToString() << '\n';
 		return -1;
 	}
 	std::cout << "sucessfuly opened \"" << argv[1] << "\"\n";

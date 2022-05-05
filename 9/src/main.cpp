@@ -1,7 +1,6 @@
 #include <iostream>
-#include <vector>
 #include <sstream>
-#include <deque>
+#include <string>
 
 #include <ftw.h>
 
@@ -32,32 +31,16 @@ char mode_tToChar(mode_t p) {
 	}
 }
 
-struct fileInfo {
-	std::string permissions;
-	char        type;
-	std::string name;
-};
-
-std::string fileInfoVectorToString(std::vector<fileInfo> files) {
-	std::stringstream stringstream;
-	for (auto file : files) {
-		stringstream << file.permissions
-			           << ' ' << file.type
-								 << ' ' << file.name
-								 << '\n';
-	}
-	return stringstream.str();
-}
-
-std::vector<fileInfo> files;
+int minsize = 0;
 int traverseFile(
 	const char* fpath, const struct stat* sb, int tflag, struct FTW* ftwbuf
 ) {
-	files.push_back({
-		mode_tToString(sb->st_mode),
-		mode_tToChar(sb->st_mode),
-		fpath
-	});
+	if (sb->st_size > minsize) {
+		std::cout << mode_tToString(sb->st_mode)
+							<< ' ' << mode_tToChar(sb->st_mode)
+							<< ' ' << (std::string(fpath) == "." ? fpath : fpath + 2)
+							<< '\n';
+	}
 	return 0;
 }
 
@@ -91,15 +74,26 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}
 
-	if (argv[1] == "") {
-		std::cout << "error: directory name is empty string\n";
+	size_t idx;
+	std::string minsizeStr(argv[2]);
+	try {
+		minsize = std::stoi(minsizeStr, &idx, 10);
+	} catch (std::invalid_argument& e) {
+		std::cout << "second parameter is not a number\n";
+		return -1;
+	} catch (std::out_of_range& e) {
+		std::cout << "size out of range\n";
+		return -1;
+	}
+
+	if (minsizeStr.length() != idx) {
+		std::cout << "second parameter is not a number\n";
 		return -1;
 	}
 
 	if (nftw(argv[1], traverseFile, 20, 0) == -1) {
-    perror("nftw");
-    exit(EXIT_FAILURE);
+    std::cout << "error while traversing file tree, errno: " << errno << '\n';
+    return -1;
   }
-
-	std::cout << fileInfoVectorToString(files);
+	return 0;
 }

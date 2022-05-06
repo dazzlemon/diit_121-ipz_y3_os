@@ -16,8 +16,8 @@ int main() {
 	// termios_p->c_cc[VERASE] = VINTR;// VERASE = DEL
 	// termios_p->c_cc[VINTR] = VERASE;// VINTR = INT
 
-	// TODO: Change MIN, TIME in noncanonical mode
-	termios_p->c_lflag &= ICANON;
+	// Change MIN, TIME in noncanonical mode
+	termios_p->c_lflag &= ~ICANON;
 	
 	termios_p->c_cc[VMIN] = 5;
 	termios_p->c_cc[VTIME] = 8;

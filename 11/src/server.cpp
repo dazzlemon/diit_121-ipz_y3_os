@@ -2,8 +2,7 @@
 
 int main() {
 	std::cout << "server started\n";
-	SOCKET_FILE_DESCRIPTOR
-	SOCKET_ADDRESS;
+	SOCKET_INIT
 	BIND_CONNECT(bind, "binding a name to a socket", "bound a name to a socket")
 
 	ASSERT( listen(socketFileDescriptor, 20)

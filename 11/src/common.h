@@ -17,19 +17,17 @@
 	} \
 	std::cout << done << '\n';
 
-#define SOCKET_FILE_DESCRIPTOR \
+#define SOCKET_INIT \
 	int socketFileDescriptor = socket(AF_INET, SOCK_STREAM, 0); \
 	ASSERT( socketFileDescriptor \
 	      , "creating endpoint for communication" \
 	      , "created endpoint for communication" \
 	      ) \
-
-#define SOCKET_ADDRESS \
 	sockaddr_in socketAddress { \
 		.sin_family = AF_INET, \
 		.sin_port = htons(8080), \
 		.sin_addr = { .s_addr = inet_addr("127.0.0.1") } \
-	}
+	};
 
 #define SOCK_FD_AND_ADDR \
 	socketFileDescriptor, \

@@ -2,8 +2,7 @@
 
 int main() {
 	std::cout << "client started\n";
-	SOCKET_FILE_DESCRIPTOR
-	SOCKET_ADDRESS;
+	SOCKET_INIT
 	BIND_CONNECT( connect
 	            , "initiating a connection on a socket"
 	            , "initiated socket connection"

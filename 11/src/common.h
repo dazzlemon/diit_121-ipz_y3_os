@@ -30,3 +30,4 @@
 	(sockaddr*)&socketAddress, \
 	sizeof(socketAddress)
 	// TODO: make c++ cast
+	// TODO: add BIND_CONNECT macro

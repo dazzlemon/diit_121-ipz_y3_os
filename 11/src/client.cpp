@@ -4,10 +4,10 @@ int main() {
 	std::cout << "client started\n";
 	SOCKET_FILE_DESCRIPTOR
 	SOCKET_ADDRESS;
-	BIND_CONNECT(
-		connect,
-		"initiating a connection on a socket", "initiated socket connection"
-	)
+	BIND_CONNECT( connect
+	            , "initiating a connection on a socket"
+	            , "initiated socket connection"
+	            )
 
 	char message[256];
 	std::cout << "please input message: ";
@@ -20,16 +20,14 @@ int main() {
 	std::copy(string.begin(), string.end(), message);
 	message[string.length()] = '\0';
 
-	ASSERT(
-		send(socketFileDescriptor, message, strlen(message), 0),
-		"sending message on a socket",
-		std::string("sent message to socket: \"") + message + "\""
-	)
+	ASSERT(	send(socketFileDescriptor, message, strlen(message), 0)
+	      , "sending message on a socket"
+	      , std::string("sent message to socket: \"") + message + "\""
+	      )
 
-	ASSERT(
-		close(socketFileDescriptor),
-		"closing socket",
-		"socket closed"
-	)
+	ASSERT(	close(socketFileDescriptor)
+	      , "closing socket"
+	      , "socket closed"
+	      )
 	return 0;
 }

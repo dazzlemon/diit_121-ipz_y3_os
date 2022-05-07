@@ -2,16 +2,9 @@
 
 int main() {
 	std::cout << "server started\n";
-
-	int socketFileDescriptor = socket(AF_INET, SOCK_STREAM, 0);
-	if (socketFileDescriptor == -1) {
-		std::cout << "error while creating endpoint for communication, errno: "
-		          << errno << '\n';
-		return -1;
-	}
-	std::cout << "created endpoint for communication\n";
-
+	SOCKET_FILE_DESCRIPTOR
 	SOCKET_ADDRESS;
+	
 	auto result = bind(BIND_CONNECT_ARGS);
 	if (result == -1) {
 		std::cout << "error while binding a name to a socket, errno: "

@@ -2,16 +2,9 @@
 
 int main() {
 	std::cout << "client started\n";
-
-	int socketFileDescriptor = socket(AF_INET, SOCK_STREAM, 0);
-	if (socketFileDescriptor == -1) {
-		std::cout << "error while creating endpoint for communication, errno: "
-		          << errno << '\n';
-		return -1;
-	}
-	std::cout << "created endpoint for communication\n";
-
+	SOCKET_FILE_DESCRIPTOR
 	SOCKET_ADDRESS;
+	
 	auto result = connect(BIND_CONNECT_ARGS);
 	if (result == -1) {
 		std::cout << "error while initiating a connection on a socket, errno: "

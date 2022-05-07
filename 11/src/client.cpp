@@ -11,6 +11,10 @@ int main() {
 	std::cout << "please input message: ";
 	std::string string;
 	std::getline(std::cin, string);
+	if (string.length() > 255) {
+		std::cout << "error: message too big to send\n";
+		return -1;
+	}
 
 	ASSERT(	send( socketFileDescriptor
 	            , reinterpret_cast<const void*>(string.c_str())

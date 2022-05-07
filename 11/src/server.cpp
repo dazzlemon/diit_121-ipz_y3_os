@@ -36,14 +36,22 @@ int main() {
 	std::cout << "listening for socket connections\n";
 
 	socklen_t socketLength = sizeof(socketAddress);
-	if (
-		accept(socketFileDescriptor, (sockaddr*)&socketAddress, &socketLength) == -1
-	) {
+	result =
+		accept(socketFileDescriptor, (sockaddr*)&socketAddress, &socketLength);
+	if (result == -1) {
 		std::cout << "error while accepting a connection on a socket, errno: "
 		          << errno << '\n';
 		return -1;
 	}
 	std::cout << "accepted a connection on socket\n";
+
+	char* buf = new char[256];
+	if (recv(result, buf, 256, 0) == -1) {
+		std::cout << "error while receiving message from socket, errno: "
+		          << errno << '\n';
+		return -1;
+	}
+	std::cout << "received message from socket: \"" << buf << "\"\n";
 
 	if (shutdown(socketFileDescriptor, SHUT_RDWR)) {
 		std::cout << "error while closing socket, errno: " << errno << '\n';

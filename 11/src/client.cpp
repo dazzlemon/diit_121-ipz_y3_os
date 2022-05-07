@@ -55,14 +55,14 @@ int main() {
 	char filename[] = "test.txt";// TODO
 	char message[] = "aboba";// TODO
 
-	auto res = writeToFile(
-		filename, static_cast<void*>(message), strlen(message)
-	);
-	if (res.has_value()) {
-		std::cout << res.value() << " returned -1, errno: " << errno << '\n';
-		return -1;
-	}
-	std::cout << "wrote to file\n";
+	// auto res = writeToFile(
+	// 	filename, static_cast<void*>(message), strlen(message)
+	// );
+	// if (res.has_value()) {
+	// 	std::cout << res.value() << " returned -1, errno: " << errno << '\n';
+	// 	return -1;
+	// }
+	// std::cout << "wrote to file\n";
 
 	if (send(socketFileDescriptor, message, strlen(message), 0) == -1) {
 		std::cout << "error while sending message on a socket, errno: "
@@ -70,14 +70,6 @@ int main() {
 		return -1;
 	}
 	std::cout << "sent message to socket\n";
-
-	char* buf = new char[strlen(message)];
-	if (recv(socketFileDescriptor, buf, strlen(message), 0) == -1) {
-		std::cout << "error while receiving message from socket, errno: "
-		          << errno << '\n';
-		return -1;
-	}
-	std::cout << "received message from socket\n";
 
 	if (close(socketFileDescriptor)) {
 		std::cout << "error while closing socket, errno: " << errno << '\n';

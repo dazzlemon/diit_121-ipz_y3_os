@@ -11,16 +11,8 @@ int main() {
 	}
 	std::cout << "created endpoint for communication\n";
 
-	sockaddr_in socketAddress {
-		.sin_family = AF_INET,
-		.sin_port = htons(8080),
-		.sin_addr = { .s_addr = inet_addr("127.0.0.1") }
-	};
-	auto result = bind(
-		socketFileDescriptor,
-		(sockaddr*)&socketAddress,// TODO: make c++ cast
-		sizeof(socketAddress)
-	);
+	SOCKET_ADDRESS;
+	auto result = bind(BIND_CONNECT_ARGS);
 	if (result == -1) {
 		std::cout << "error while binding a name to a socket, errno: "
 		          << errno << '\n';

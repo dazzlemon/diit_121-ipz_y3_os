@@ -8,20 +8,17 @@ int main() {
 	            , "initiated socket connection"
 	            )
 
-	char message[256];
 	std::cout << "please input message: ";
 	std::string string;
 	std::getline(std::cin, string);
-	if (string.length() > 255) {
-		std::cout << "error: message too big to send\n";
-		return -1;
-	}
-	std::copy(string.begin(), string.end(), message);
-	message[string.length()] = '\0';
 
-	ASSERT(	send(socketFileDescriptor, message, strlen(message), 0)
+	ASSERT(	send( socketFileDescriptor
+	            , reinterpret_cast<const void*>(string.c_str())
+	            , string.length()
+	            , 0
+	            )
 	      , "sending message on a socket"
-	      , std::string("sent message to socket: \"") + message + "\""
+	      , std::string("sent message to socket: \"") + string + "\""
 	      )
 
 	ASSERT(	close(socketFileDescriptor)

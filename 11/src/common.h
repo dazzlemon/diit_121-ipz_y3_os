@@ -30,14 +30,11 @@
 	};
 
 #define SOCK_FD_AND_ADDR \
-	socketFileDescriptor, \
-	reinterpret_cast<sockaddr*>(&socketAddress)
+	socketFileDescriptor, reinterpret_cast<sockaddr*>(&socketAddress)
 
-#define BIND_CONNECT( \
-	fname, whileError, doneMessage \
-) \
+#define BIND_CONNECT(fname, errorWhile, doneMessage) \
 	auto result = fname(SOCK_FD_AND_ADDR, sizeof(socketAddress)); \
 	ASSERT(	result \
-	      , whileError \
+	      , errorWhile \
 	      , doneMessage \
 	      )

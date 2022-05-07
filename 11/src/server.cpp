@@ -4,45 +4,33 @@ int main() {
 	std::cout << "server started\n";
 	SOCKET_FILE_DESCRIPTOR
 	SOCKET_ADDRESS;
-	
-	auto result = bind(BIND_CONNECT_ARGS);
-	if (result == -1) {
-		std::cout << "error while binding a name to a socket, errno: "
-		          << errno << '\n';
-		return -1;
-	}
-	std::cout << "bound a name to a socket\n";
+	BIND_CONNECT(bind, "binding a name to a socket", "bound a name to a socket")
 
-	if (listen(socketFileDescriptor, 20) == -1) {
-		std::cout << "error while listening for socket connections, errno: "
-		          << errno << '\n';
-		return -1;
-	}
-	std::cout << "listening for socket connections\n";
+	ASSERT(
+		listen(socketFileDescriptor, 20),
+		"listening for socket connections",
+		"listening for socket connections"
+	)
 
 	socklen_t socketLength = sizeof(socketAddress);
-	result =
-		accept(socketFileDescriptor, (sockaddr*)&socketAddress, &socketLength);
-	if (result == -1) {
-		std::cout << "error while accepting a connection on a socket, errno: "
-		          << errno << '\n';
-		return -1;
-	}
-	std::cout << "accepted a connection on socket\n";
+	result = accept(SOCK_FD_AND_ADDR, &socketLength);
+	ASSERT(
+		result,
+		"accepting a connection on a socket",
+		"accepted a connection on socket"
+	)
 
 	char* buf = new char[256];
-	if (recv(result, buf, 256, 0) == -1) {
-		std::cout << "error while receiving message from socket, errno: "
-		          << errno << '\n';
-		return -1;
-	}
-	std::cout << "received message from socket: \"" << buf << "\"\n";
+	ASSERT(
+		recv(result, buf, 256, 0),
+		"receiving message from socket",
+		std::string("received message from socket: \"") + buf + "\""
+	)
 
-	if (shutdown(socketFileDescriptor, SHUT_RDWR)) {
-		std::cout << "error while closing socket, errno: " << errno << '\n';
-		return -1;
-	}
-	std::cout << "socket shutdown\n";
-
+	ASSERT(
+		shutdown(socketFileDescriptor, SHUT_RDWR),
+		"closing socket",
+		"socket shutdown"
+	)
 	return 0;
 }

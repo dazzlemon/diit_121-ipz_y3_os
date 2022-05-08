@@ -15,14 +15,13 @@ pthread_cond_t thread_flag_cv;
 int free_thr;
 bool thread_flag;
 int socketFileDescriptor;
-const int kBufferSize = 1024;
-char buffer[kBufferSize];
+char buffer[MSG_SIZE];
 
 void service() {
 	std::cout << "service started\n";
 	bool continue_ = true;
 	do {
-		switch (recv(conn, buffer, kBufferSize, 0)) {
+		switch (recv(conn, buffer, MSG_SIZE, 0)) {
 			case -1: std::cout << "error while receiving message from socket " << conn
 			                   << ", errno: " << errno << '\n';
 			case 0:
@@ -88,10 +87,6 @@ int main() {
 	            , "binding a name to a socket"
 	            , "bound a name to a socket"
 	            )
-	// if (bind(socketFileDescriptor, addr->ai_addr, addr->ai_addrlen)) {
-	// 	std::cout << "Error binding socket, errno" << errno << "\n";
-	// 	return -1;
-	// }
 	freeaddrinfo(addr);
 	
 	ASSERT( listen(socketFileDescriptor, 5)
@@ -112,7 +107,7 @@ int main() {
 		      )
 
 		if (free_thr <= 0) {
-			send(conn, buffer, kBufferSize, 0);
+			send(conn, buffer, MSG_SIZE, 0);
 			std::cout << "sent answer\n";
 		}	else {
 			thread_flag = true;

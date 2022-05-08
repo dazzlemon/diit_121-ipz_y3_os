@@ -34,3 +34,5 @@
 	      , errorWhile \
 	      , doneMessage \
 	      )
+
+#define MSG_SIZE 256

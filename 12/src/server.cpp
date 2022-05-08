@@ -24,7 +24,7 @@ void service() {
 	while (recv(conn, buffer, kBufferSize, 0) != 0) {
 		std::string string(buffer);
 		std::sort(string.begin(), string.end());
-		send(conn, string.c_str(), string.length(), 0);
+		send(conn, string.c_str(), string.length() + 1, 0);
 		// send(conn, buffer, kBufferSize, 0);
 	}
 	close(conn);
@@ -32,19 +32,14 @@ void service() {
 }
 
 void* thread_func(void* thread_arg) {
-	std::cout << "thread started\n";
 	while (true)	{
-		std::cout << "thread loop1\n";
 		pthread_mutex_lock(&thread_flag_mutex);
 		while (!thread_flag) {
-			std::cout << "thread loop2\n";
 			pthread_cond_wait(&thread_flag_cv, &thread_flag_mutex);
 			thread_flag = false;
-			std::cout << "thread flag set to false\n";
 			
 			pthread_mutex_lock(&thread_busy_mutex);
 				free_thr--;
-				std::cout << "thread being used set to false\n";
 			pthread_mutex_unlock(&thread_busy_mutex);
 			
 			pthread_mutex_unlock(&thread_flag_mutex);
@@ -52,7 +47,6 @@ void* thread_func(void* thread_arg) {
 			pthread_mutex_lock(&thread_busy_mutex);
 			
 			free_thr++;
-			std::cout << "thread freed\n";
 			pthread_mutex_unlock(&thread_busy_mutex);
 		}
 	}
@@ -104,7 +98,7 @@ int main() {
 		std::cout << "Ошибка listen\n";// TODO: translate
 		return -1;
 	}
-	std::cout << "---cервер в ожидании\n";// TODO: translate
+	std::cout << "listening for connections\n";// TODO: translate
 
 	sockaddr socketAddress;
 	socklen_t socketLength = sizeof(socketAddress);
@@ -126,7 +120,6 @@ int main() {
 		}	else {
 			thread_flag = true;
 			pthread_cond_signal(&thread_flag_cv);
-			std::cout << "no free threads\n";
 		}
 	}
 	return 0;

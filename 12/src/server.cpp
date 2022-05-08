@@ -85,13 +85,7 @@ int main() {
 
 	HINTS(AI_PASSIVE | AI_ADDRCONFIG)
 	GETADDRINFO(NULL, "1234")
-	
-	socketFileDescriptor =
-		socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
-	if (socketFileDescriptor < 0) {
-		std::cout << "Error while creating endpoint, errno: " << errno << "\n";
-		return -1;
-	}
+	SOCKET(addr->ai_family)
 	
 	int optval = 1;// allow reuse of local addresses
 	setsockopt(

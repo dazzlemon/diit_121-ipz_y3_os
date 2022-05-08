@@ -12,3 +12,11 @@
 		          << ", errno: " << errno << '\n'; \
 		return -1; \
 	}
+
+#define SOCKET(family) \
+	int socketFileDescriptor = \
+		socket(family, addr->ai_socktype, addr->ai_protocol); \
+	if (socketFileDescriptor < 0) { \
+		std::cout << "Error while creating endpoint, errno: " << errno << "\n"; \
+		return -1; \
+	}

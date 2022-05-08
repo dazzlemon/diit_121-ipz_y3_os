@@ -11,12 +11,8 @@ int main() {
 	GETADDRINFO("127.0.0.1", NULL)
 	
 	auto addrInf = reinterpret_cast<sockaddr_in*>(addr->ai_addr);
-	int socketFileDescriptor =
-		socket(addrInf->sin_family, addr->ai_socktype, addr->ai_protocol);
-	if (socketFileDescriptor < 0) {
-		std::cout << "Ошибка при создании сокета\n";// TODO: translate
-		return -1;
-	}
+
+	SOCKET(addrInf->sin_family)
 	
 	addrInf->sin_port = htons(1234);
 	if (connect(socketFileDescriptor, (sockaddr*) addrInf, addr->ai_addrlen)) {

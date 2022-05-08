@@ -1,3 +1,10 @@
+#define ASSERT(flag, errorWhile, done) \
+	if (flag == -1) { \
+		std::cout << "error while " << errorWhile << ", errno: " << errno << '\n'; \
+		return -1; \
+	} \
+	std::cout << done << '\n';
+
 #define HINTS(flags) \
 	addrinfo hints { \
 		.ai_flags = flags, \
@@ -20,3 +27,10 @@
 		std::cout << "Error while creating endpoint, errno: " << errno << "\n"; \
 		return -1; \
 	}
+
+#define BIND_CONNECT(fname, __addr, errorWhile, doneMessage) \
+	result = fname(socketFileDescriptor, __addr, addr->ai_addrlen); \
+	ASSERT(	result \
+	      , errorWhile \
+	      , doneMessage \
+	      )

@@ -9,17 +9,15 @@
 int main() {	
 	HINTS(AI_ADDRCONFIG)
 	GETADDRINFO("127.0.0.1", NULL)
-	
 	auto addrInf = reinterpret_cast<sockaddr_in*>(addr->ai_addr);
-
 	SOCKET(addrInf->sin_family)
-	
-	addrInf->sin_port = htons(1234);
-	if (connect(socketFileDescriptor, (sockaddr*) addrInf, addr->ai_addrlen)) {
-		std::cout << "Ошибка при подключении\n";// TODO: translate
-		return -1;
-	}
 
+	addrInf->sin_port = htons(1234);
+	BIND_CONNECT( connect
+	            , (sockaddr*) addrInf
+	            , "initiating a connection on a socket"
+	            , "initiated socket connection"
+	            )
 	freeaddrinfo(addr);
 	
 	std::cout << "please input message: ";

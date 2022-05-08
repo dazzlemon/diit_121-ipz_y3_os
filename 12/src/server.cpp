@@ -63,14 +63,7 @@ void* thread_func(void* thread_arg) {
 
 #define CREATE_THREAD(name) \
 	pthread_t name; \
-	pthread_create(&name, NULL, thread_func, NULL); \
-
-#define ASSERT(flag, errorWhile, done) \
-	if (flag == -1) { \
-		std::cout << "error while " << errorWhile << ", errno: " << errno << '\n'; \
-		return -1; \
-	} \
-	std::cout << done << '\n';
+	pthread_create(&name, NULL, thread_func, NULL);
 
 int main() {
 	pthread_mutex_init(&thread_flag_mutex, NULL);
@@ -90,10 +83,15 @@ int main() {
 	int optval = 1;// allow reuse of local addresses
 	setsockopt(
 		socketFileDescriptor, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
-	if (bind(socketFileDescriptor, addr->ai_addr, addr->ai_addrlen)) {
-		std::cout << "Error binding socket, errno" << errno << "\n";
-		return -1;
-	}
+	BIND_CONNECT( bind
+	            , addr->ai_addr
+	            , "binding a name to a socket"
+	            , "bound a name to a socket"
+	            )
+	// if (bind(socketFileDescriptor, addr->ai_addr, addr->ai_addrlen)) {
+	// 	std::cout << "Error binding socket, errno" << errno << "\n";
+	// 	return -1;
+	// }
 	freeaddrinfo(addr);
 	
 	ASSERT( listen(socketFileDescriptor, 5)

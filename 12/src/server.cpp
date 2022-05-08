@@ -2,7 +2,7 @@
 
 #include "common.h"
 
-int conn = 0;// TODO
+int conn = 0;
 pthread_mutex_t thread_flag_mutex;
 pthread_mutex_t thread_busy_mutex;
 pthread_cond_t thread_flag_cv;

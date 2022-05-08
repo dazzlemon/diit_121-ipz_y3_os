@@ -29,27 +29,36 @@ int main() {
 		std::cout << "Ошибка при подключении\n";// TODO: translate
 		return -1;
 	}
-	
-	freeaddrinfo(addr);
-	std::cout << "---сообщение серверу\n";// TODO: translate
-	char buf[1024];
-	if (read(0, buf, sizeof(buf)) == -1) {
-		std::cout << "error while reading, errno: " << errno << '\n';
-		return -1;
-	} 
 
-	if (send(socketFileDescriptor, buf, sizeof(buf), 0) == -1) {
+	freeaddrinfo(addr);
+	
+	std::cout << "please input message: ";
+	std::string string;
+	std::getline(std::cin, string);
+	if (string.length() > 255) {
+		std::cout << "error: message too big to send\n";
+		return -1;
+	}
+	
+	if (send( socketFileDescriptor
+	        , reinterpret_cast<const void*>(string.c_str())
+	        , string.length()
+	        , 0
+	        ) == -1
+	) {
 		std::cout << "error while sending message to socket, errno: " << errno
 		          << '\n';
 		return -1;
 	}
+	std::cout << "sent message to socket: \"" << string << "\"\n";
 
-	if (recv(socketFileDescriptor, buf, sizeof(buf), 0) < 0) {
+	char buf[1024];
+	if (recv(socketFileDescriptor, buf, sizeof(buf), 0) == -1) {
 		std::cout << "Ошибка при получении ответа\n";// TODO: translate
 		return -1;
 	}
-	
 	std::cout << "---получен ответ от сервера" << buf << '\n';// TODO: translate
+	
 	close(socketFileDescriptor);
 	return 0;
 }

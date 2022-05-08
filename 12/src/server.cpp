@@ -11,33 +11,37 @@ pthread_mutex_t thread_flag_mutex;
 pthread_mutex_t thread_busy_mutex;
 pthread_cond_t thread_flag_cv;
 int free_thr;
-int thread_flag;
+bool thread_flag;
 int socketFileDescriptor;
 int rc;
 void* buf1;
 
 void service() {
+	std::cout << "service started\n";
 	const int kBufferSize = 1024;
 	char buffer[kBufferSize];
-	std::cout << "receiving data\n";
 	// TODO: also need to check for -1
 	while (recv(conn, buffer, kBufferSize, 0) != 0) {
-		std::cout << buffer << "\n";
 		send(conn, buffer, kBufferSize, 0);
 	}
 	close(conn);
-	std::cout << "done\n";
+	std::cout << "service done\n";
 }
 
 void* thread_func(void* thread_arg) {
-	while (1)	{
+	std::cout << "thread started\n";
+	while (true)	{
+		std::cout << "thread loop1\n";
 		pthread_mutex_lock(&thread_flag_mutex);
 		while (!thread_flag) {
+			std::cout << "thread loop2\n";
 			pthread_cond_wait(&thread_flag_cv, &thread_flag_mutex);
-			thread_flag = 0;
+			thread_flag = false;
+			std::cout << "thread flag set to false\n";
 			
 			pthread_mutex_lock(&thread_busy_mutex);
 				free_thr--;
+				std::cout << "thread being used set to false\n";
 			pthread_mutex_unlock(&thread_busy_mutex);
 			
 			pthread_mutex_unlock(&thread_flag_mutex);
@@ -45,6 +49,7 @@ void* thread_func(void* thread_arg) {
 			pthread_mutex_lock(&thread_busy_mutex);
 			
 			free_thr++;
+			std::cout << "thread freed\n";
 			pthread_mutex_unlock(&thread_busy_mutex);
 		}
 	}
@@ -58,7 +63,7 @@ int main() {
 	pthread_mutex_init(&thread_flag_mutex, NULL);
 	pthread_mutex_init(&thread_busy_mutex, NULL);
 	pthread_cond_init( &thread_flag_cv,    NULL);
-	thread_flag = 0;
+	thread_flag = false;
 
 	CREATE_THREAD(id1)
 	CREATE_THREAD(id2)
@@ -116,7 +121,8 @@ int main() {
 			send(conn, buf1, sizeof(buf1), 0);
 			std::cout << "sent answer\n";
 		}	else {
-			thread_flag = 1;
+			thread_flag = true;
+			pthread_cond_signal(&thread_flag_cv);
 			std::cout << "no free threads\n";
 		}
 	}

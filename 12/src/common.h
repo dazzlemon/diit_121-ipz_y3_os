@@ -1,3 +1,9 @@
+#include <iostream>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <cstring>
+#include <netdb.h>
+
 #define ASSERT(flag, errorWhile, done) \
 	if (flag == -1) { \
 		std::cout << "error while " << errorWhile << ", errno: " << errno << '\n'; \

@@ -1,9 +1,3 @@
-#include <iostream>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <cstring>
-#include <netdb.h>
-
 #include "common.h"
 
 int main() {	

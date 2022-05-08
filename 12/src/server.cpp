@@ -105,14 +105,19 @@ int main() {
 		             , reinterpret_cast<sockaddr*>(&socketAddress)
 		             , (&socketLength)
 		             );
-		if (conn < 0) {
+		if (conn == -1) {
+			std::cout << "error while accepting connection on socket, errno: "
+			          << errno << '\n'; 
 			return -1;
 		}
-	
+		std::cout << "accepted connection on socket\n";
+
 		if (free_thr <= 0) {
 			send(conn, buf1, sizeof(buf1), 0);
+			std::cout << "sent answer\n";
 		}	else {
 			thread_flag = 1;
+			std::cout << "no free threads\n";
 		}
 	}
 	return 0;

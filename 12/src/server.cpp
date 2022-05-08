@@ -6,6 +6,8 @@
 #include <netdb.h>
 #include <cstring>
 
+#include "common.h"
+
 int conn = 0;// TODO
 pthread_mutex_t thread_flag_mutex;
 pthread_mutex_t thread_busy_mutex;
@@ -13,7 +15,6 @@ pthread_cond_t thread_flag_cv;
 int free_thr;
 bool thread_flag;
 int socketFileDescriptor;
-int rc;
 const int kBufferSize = 1024;
 char buffer[kBufferSize];
 
@@ -64,6 +65,13 @@ void* thread_func(void* thread_arg) {
 	pthread_t name; \
 	pthread_create(&name, NULL, thread_func, NULL); \
 
+#define ASSERT(flag, errorWhile, done) \
+	if (flag == -1) { \
+		std::cout << "error while " << errorWhile << ", errno: " << errno << '\n'; \
+		return -1; \
+	} \
+	std::cout << done << '\n';
+
 int main() {
 	pthread_mutex_init(&thread_flag_mutex, NULL);
 	pthread_mutex_init(&thread_busy_mutex, NULL);
@@ -75,21 +83,19 @@ int main() {
 	CREATE_THREAD(id3)
 	free_thr = 3;
 
-	addrinfo hints;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
-	addrinfo* addr;
-	rc = getaddrinfo(NULL, "1234", &hints, &addr);
-	if (rc) {
-		std::cout << "Сбой поиска имени хоста\n";// TODO: translate
+	HINTS(AI_PASSIVE | AI_ADDRCONFIG)
+
+	int result = getaddrinfo(NULL, "1234", &hints, &addr);
+	if (result != 0) {
+		std::cout << "Error translating network address, error code" << result
+		          << ", errno: " << errno << '\n';
 		return -1;
 	}
 	
 	socketFileDescriptor =
 		socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 	if (socketFileDescriptor < 0) {
-		std::cout << "Ошибка при создании сокета\n";// TODO: translate
+		std::cout << "Error while creating endpoint, errno: " << errno << "\n";
 		return -1;
 	}
 	
@@ -97,16 +103,15 @@ int main() {
 	setsockopt(
 		socketFileDescriptor, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 	if (bind(socketFileDescriptor, addr->ai_addr, addr->ai_addrlen)) {
-		std::cout << "Ошибка при связывании сокета\n";// TODO: translate
+		std::cout << "Error binding socket, errno" << errno << "\n";
 		return -1;
 	}
-	
 	freeaddrinfo(addr);
-	if (listen(socketFileDescriptor, 5)) {
-		std::cout << "Ошибка listen\n";// TODO: translate
-		return -1;
-	}
-	std::cout << "listening for connections\n";// TODO: translate
+	
+	ASSERT( listen(socketFileDescriptor, 5)
+	      , "listening for socket connections"
+	      , "listening for socket connections"
+	      )
 
 	sockaddr socketAddress;
 	socklen_t socketLength = sizeof(socketAddress);
@@ -115,12 +120,10 @@ int main() {
 		             , reinterpret_cast<sockaddr*>(&socketAddress)
 		             , (&socketLength)
 		             );
-		if (conn == -1) {
-			std::cout << "error while accepting connection on socket, errno: "
-			          << errno << '\n'; 
-			return -1;
-		}
-		std::cout << "accepted connection on socket\n";
+		ASSERT( conn
+		      , "accepting a connection on a socket"
+		      , "accepted a connection on socket"
+		      )
 
 		if (free_thr <= 0) {
 			send(conn, buffer, kBufferSize, 0);
@@ -130,5 +133,4 @@ int main() {
 			pthread_cond_signal(&thread_flag_cv);
 		}
 	}
-	return 0;
 }

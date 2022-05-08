@@ -4,12 +4,11 @@
 #include <cstring>
 #include <netdb.h>
 
+#include "common.h"
+
 int main() {	
-	addrinfo hints;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_ADDRCONFIG;
-	addrinfo* addr;
+	HINTS(AI_ADDRCONFIG)
+	
 	int result = getaddrinfo("127.0.0.1", NULL, &hints, &addr);
 	if (result) {
 		std::cout << "Сбой поиска имени хоста\n";// TODO: translate

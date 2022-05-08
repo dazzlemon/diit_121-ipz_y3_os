@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 
 #include <unistd.h>
 #include <sys/socket.h>
@@ -14,15 +15,17 @@ int free_thr;
 bool thread_flag;
 int socketFileDescriptor;
 int rc;
-void* buf1;
+const int kBufferSize = 1024;
+char buffer[kBufferSize];
 
 void service() {
 	std::cout << "service started\n";
-	const int kBufferSize = 1024;
-	char buffer[kBufferSize];
 	// TODO: also need to check for -1
 	while (recv(conn, buffer, kBufferSize, 0) != 0) {
-		send(conn, buffer, kBufferSize, 0);
+		std::string string(buffer);
+		std::sort(string.begin(), string.end());
+		send(conn, string.c_str(), string.length(), 0);
+		// send(conn, buffer, kBufferSize, 0);
 	}
 	close(conn);
 	std::cout << "service done\n";
@@ -118,7 +121,7 @@ int main() {
 		std::cout << "accepted connection on socket\n";
 
 		if (free_thr <= 0) {
-			send(conn, buf1, sizeof(buf1), 0);
+			send(conn, buffer, kBufferSize, 0);
 			std::cout << "sent answer\n";
 		}	else {
 			thread_flag = true;

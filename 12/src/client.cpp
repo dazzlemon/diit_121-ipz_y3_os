@@ -57,7 +57,7 @@ int main() {
 		std::cout << "Ошибка при получении ответа\n";// TODO: translate
 		return -1;
 	}
-	std::cout << "---получен ответ от сервера" << buf << '\n';// TODO: translate
+	std::cout << "received an answer from server: \"" << buf << "\"\n";
 	
 	close(socketFileDescriptor);
 	return 0;

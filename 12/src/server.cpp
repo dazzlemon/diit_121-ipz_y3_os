@@ -3,7 +3,6 @@
 
 #include <unistd.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <netdb.h>
 #include <cstring>
 
@@ -20,16 +19,29 @@ char buffer[kBufferSize];
 
 void service() {
 	std::cout << "service started\n";
-	// TODO: also need to check for -1
-	while (recv(conn, buffer, kBufferSize, 0) != 0) {
-		std::string string(buffer);
-		std::sort(string.begin(), string.end());
-		send(conn, string.c_str(), string.length() + 1, 0);
-		// send(conn, buffer, kBufferSize, 0);
-	}
+	bool continue_ = true;
+	do {
+		switch (recv(conn, buffer, kBufferSize, 0)) {
+			case -1: std::cout << "error while receiving message from socket " << conn
+			                   << ", errno: " << errno << '\n';
+			case 0:
+				continue_ = false;
+				break;
+			default:
+				std::string string(buffer);
+				std::sort(string.begin(), string.end());
+				send(conn, string.c_str(), string.length() + 1, 0);
+				break;
+		}
+	} while (continue_);
 	close(conn);
 	std::cout << "service done\n";
 }
+
+#define WITH_MUTEX(mutex, action) \
+	pthread_mutex_lock(mutex); \
+	action \
+	pthread_mutex_unlock(mutex); \
 
 void* thread_func(void* thread_arg) {
 	while (true)	{
@@ -37,17 +49,13 @@ void* thread_func(void* thread_arg) {
 		while (!thread_flag) {
 			pthread_cond_wait(&thread_flag_cv, &thread_flag_mutex);
 			thread_flag = false;
-			
-			pthread_mutex_lock(&thread_busy_mutex);
-				free_thr--;
-			pthread_mutex_unlock(&thread_busy_mutex);
+
+			WITH_MUTEX(&thread_busy_mutex, free_thr--;)			
 			
 			pthread_mutex_unlock(&thread_flag_mutex);
-				service();
-			pthread_mutex_lock(&thread_busy_mutex);
-			
-			free_thr++;
-			pthread_mutex_unlock(&thread_busy_mutex);
+			service();
+
+			WITH_MUTEX(&thread_busy_mutex, free_thr++;)
 		}
 	}
 }

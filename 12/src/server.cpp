@@ -84,13 +84,7 @@ int main() {
 	free_thr = 3;
 
 	HINTS(AI_PASSIVE | AI_ADDRCONFIG)
-
-	int result = getaddrinfo(NULL, "1234", &hints, &addr);
-	if (result != 0) {
-		std::cout << "Error translating network address, error code" << result
-		          << ", errno: " << errno << '\n';
-		return -1;
-	}
+	GETADDRINFO(NULL, "1234")
 	
 	socketFileDescriptor =
 		socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);

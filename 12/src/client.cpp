@@ -8,12 +8,7 @@
 
 int main() {	
 	HINTS(AI_ADDRCONFIG)
-	
-	int result = getaddrinfo("127.0.0.1", NULL, &hints, &addr);
-	if (result) {
-		std::cout << "Сбой поиска имени хоста\n";// TODO: translate
-		return -1;
-	}
+	GETADDRINFO("127.0.0.1", NULL)
 	
 	auto addrInf = reinterpret_cast<sockaddr_in*>(addr->ai_addr);
 	int socketFileDescriptor =

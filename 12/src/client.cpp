@@ -4,7 +4,7 @@
 #include <cstring>
 #include <netdb.h>
 
-int main(int argc, char* argv[]) {
+int main() {
 	sockaddr_in* addrInf;
 	int s;
 	int rc;
@@ -12,15 +12,10 @@ int main(int argc, char* argv[]) {
 	addrinfo* addr;
 	char buf[1024];
 	
-	if (argc != 2) {
-		std::cout << "Поддерживается только одиночный аргумент\n";// TODO: translate
-		return 1;
-	}
-
 	memset(&hints , 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_ADDRCONFIG;
-	rc = getaddrinfo(argv[1],NULL,&hints,&addr);
+	rc = getaddrinfo("127.0.0.1", NULL, &hints, &addr);
 	if (rc) {
 		std::cout << "Сбой поиска имени хоста\n";// TODO: translate
 		return 1;

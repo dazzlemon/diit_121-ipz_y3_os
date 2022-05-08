@@ -57,6 +57,7 @@ int main() {
 	pthread_t id1;
 	pthread_t id2;
 	pthread_t id3;
+
 	pthread_mutex_init(&thread_flag_mutex, NULL);
 	pthread_mutex_init(&thread_busy_mutex, NULL);
 	pthread_cond_init(&thread_flag_cv, NULL);
@@ -72,30 +73,36 @@ int main() {
 		std::cout << "Сбой поиска имени хоста\n";// TODO: translate
 		return -1;
 	}
+	
 	if ((s = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol)) < 0) {
 		std::cout << "Ошибка при создании сокета\n";// TODO: translate
 		return -1;
 	}
+	
 	i = 1;
 	setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i));
 	if (bind(s, addr->ai_addr, addr->ai_addrlen)) {
 		std::cout << "Ошибка при связывании сокета\n";// TODO: translate
 		return -1;
 	}
+	
 	freeaddrinfo(addr);
 	if (listen(s, 5)) {
 		std::cout << "Ошибка listen\n";// TODO: translate
 		return -1;
 	}
+	
 	std::cout << "---cервер в ожидании\n";// TODO: translate
 	while (true)	{
-		int len;
 		bzero(&clt, sizeof(clt));
-		len = sizeof(clt);
-		conn = accept(s, (sockaddr*)&address, reinterpret_cast<socklen_t*>(&addrL));
+		conn = accept( s
+		             , reinterpret_cast<sockaddr*>(&address)
+		             , reinterpret_cast<socklen_t*>(&addrL)
+		             );
 		if (conn < 0) {
 			return -1;
 		}
+	
 		if (free_thr <= 0) {
 			send(conn, buf1, sizeof(buf1), 0);
 		}	else {
